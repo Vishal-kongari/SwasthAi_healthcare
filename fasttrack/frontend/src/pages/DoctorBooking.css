@@ -1,0 +1,204 @@
+.booking-page {
+  padding: 3rem 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  font-family: 'Outfit', sans-serif;
+}
+
+.booking-header {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.booking-header h1 {
+  font-size: 2.5rem;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.booking-header p {
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+.auth-alert {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.section-title {
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  color: #1e293b;
+  font-size: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+/* Patient View - Doctors Grid */
+.doctors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.doctor-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.doctor-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+}
+
+.doc-icon {
+  width: 64px;
+  height: 64px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3b82f6;
+  margin-bottom: 1rem;
+}
+
+.doc-info h3 {
+  margin: 0 0 0.25rem 0;
+  color: #0f172a;
+  font-size: 1.25rem;
+}
+
+.doc-specialty {
+  color: #64748b;
+  margin: 0 0 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+.book-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  width: 100%;
+}
+
+.book-btn:hover {
+  background: #2563eb;
+}
+
+/* Appointments List */
+.appointments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.appt-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 1.25rem;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.status-pending { border-left: 4px solid #f59e0b; }
+.status-accepted { border-left: 4px solid #10b981; }
+.status-declined { border-left: 4px solid #ef4444; }
+
+.status-badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-badge.pending { background: #fef3c7; color: #b45309; }
+.status-badge.accepted { background: #d1fae5; color: #047857; }
+.status-badge.declined { background: #fee2e2; color: #b91c1c; }
+
+/* Doctor View specific */
+.doctor-appt-card {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .doctor-appt-card {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.doc-appt-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.appt-person, .appt-time, .appt-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.appt-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 640px) {
+  .appt-actions {
+    margin-top: 0;
+  }
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.action-btn:hover { opacity: 0.8; }
+.action-btn.accept { background: #10b981; color: white; }
+.action-btn.decline { background: #f1f5f9; color: #ef4444; border: 1px solid #e2e8f0; }
+
+.no-data {
+  color: #64748b;
+  text-align: center;
+  padding: 2rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-style: italic;
+}
