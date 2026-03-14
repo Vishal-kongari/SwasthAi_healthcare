@@ -60,11 +60,26 @@ export default function DoctorBooking() {
   }, [currentUser, userRole]);
 
   async function bookAppointment(doctorId, doctorName) {
+    let patientDp = '';
+    let patientDetails = {};
+    try {
+      const userSnap = await get(ref(db, `users/${currentUser.uid}`));
+      if (userSnap.exists()) {
+        patientDp = userSnap.val().displayPicture || '';
+        patientDetails = userSnap.val();
+      }
+    } catch (e) {
+      console.error("Could not fetch patient DP");
+    }
+
     const apptRef = ref(db, 'appointments');
     const newApptRef = push(apptRef);
     await set(newApptRef, {
       patientId: currentUser.uid,
-      patientName: currentUser.email, // Or actual name if stored
+      patientName: patientDetails.name || currentUser.email,
+      patientEmail: currentUser.email,
+      patientPhone: patientDetails.phone || '',
+      patientDp: patientDp,
       doctorId,
       doctorName,
       status: 'pending',
@@ -78,6 +93,26 @@ export default function DoctorBooking() {
     await update(apptRef, { status });
   }
 
+  // Wait for loading or redirect in a `useEffect` instead if desired
+  // But to fix the hooks error right now, just don't return early before hooks
+  // Actually, all hooks (useState, useEffect) are already called at the top of the file!
+  // The early return `if (!currentUser) return ...` is at line 81, *after* all hooks.
+  // Wait, let's look closer. Are there any hooks inside the early return? No.
+  // BUT what if `currentUser` becomes null *during* the render?
+  // Let's change the return to not use a completely different early return that might skip nested custom hooks if there were any, though there aren't.
+  // Actually, wait! The error "Rendered fewer hooks than expected" happens when a component returns early BEFORE a hook is called, or if a hook is inside a condition.
+  // In `DoctorBooking.jsx`:
+  // line 10: const [doctors, setDoctors] = useState([]);
+  // line 11: const [appointments, setAppointments] = useState([]);
+  // ...
+  // line 81: if (!currentUser) return <div className="booking-page"><div className="auth-alert">Please login to access bookings.</div></div>;
+  // This is actually perfectly legal since all hooks are above line 81.
+  // Let me double check where the error is coming from.
+  // Wait, `Dashboard.jsx` has `useSearchParams()` and `useHealthData()`.
+  // Then `if (params.get... )`.
+  // Wait, let me check `Navbar.jsx`? `useAuth()`, `useNavigate()`.
+  // Let's re-examine `Dashboard.jsx`.
+  
   if (!currentUser) return <div className="booking-page"><div className="auth-alert">Please login to access bookings.</div></div>;
 
   return (
@@ -131,9 +166,16 @@ export default function DoctorBooking() {
               {appointments.map(appt => (
                 <div key={appt.id} className="appt-card doctor-appt-card">
                   <div className="doc-appt-info">
-                    <div className="appt-person">
-                      <User size={18} color="#64748b" />
-                      Patient: {appt.patientName}
+                    <div className="appt-person" style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px'}}>
+                      {appt.patientDp ? (
+                        <img src={appt.patientDp} alt="Patient" style={{width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover'}} />
+                      ) : (
+                        <User size={24} color="#64748b" />
+                      )}
+                      <div>
+                        <strong>{appt.patientName}</strong> <br/>
+                        <small style={{color: '#64748b'}}>{appt.patientEmail} {appt.patientPhone && `| ${appt.patientPhone}`}</small>
+                      </div>
                     </div>
                     <div className="appt-time">
                       <Clock size={18} color="#64748b" />

@@ -1,0 +1,251 @@
+.doc-dashboard-page {
+  min-height: calc(100vh - 70px);
+  background-color: #f8fafc;
+  position: relative;
+  overflow: hidden;
+  padding: 3rem 1.5rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.doc-bg-shape {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: 0;
+}
+
+.shape-primary {
+  width: 500px;
+  height: 500px;
+  background: rgba(59, 130, 246, 0.15);
+  top: -100px;
+  right: -100px;
+}
+
+.shape-secondary {
+  width: 400px;
+  height: 400px;
+  background: rgba(139, 92, 246, 0.1);
+  bottom: -50px;
+  left: -150px;
+}
+
+.doc-dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+}
+
+/* Header */
+.doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 2rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.doc-profile-brief {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.doc-dp-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 4px solid white;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.doc-dp-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.doc-greeting {
+  font-size: 0.95rem;
+  color: #64748b;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.doc-name {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.4rem 0;
+  letter-spacing: -0.5px;
+}
+
+.doc-hospital {
+  font-size: 0.9rem;
+  color: #3b82f6;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Buttons */
+.doc-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.doc-action-btn.subtle {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.doc-action-btn.subtle:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.doc-action-btn.primary {
+  background: white;
+  color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.doc-action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+/* Stats Grid */
+.doc-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.doc-stat-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  transition: transform 0.2s;
+}
+
+.doc-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+}
+
+.stat-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon-wrapper.blue { background: #eff6ff; }
+.stat-icon-wrapper.green { background: #ecfdf5; }
+.stat-icon-wrapper.purple { background: #f5f3ff; }
+
+.stat-info h3 {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0 0 0.2rem 0;
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1;
+}
+
+/* Modules Grid */
+.doc-modules-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.doc-module {
+  background: white;
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.doc-module.highlight {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+.doc-module.highlight h2 {
+  color: white;
+  font-size: 1.8rem;
+  margin: 0 0 1rem 0;
+  font-weight: 800;
+}
+
+.doc-module.highlight p {
+  color: #bfdbfe;
+  font-size: 1.05rem;
+  max-width: 500px;
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+}
+
+.module-content {
+  position: relative;
+  z-index: 2;
+}
+
+.module-illustration {
+  position: absolute;
+  right: -20px;
+  bottom: -20px;
+  z-index: 1;
+  transform: rotate(-15deg);
+}
+
+@media (max-width: 768px) {
+  .doc-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .doc-module {
+    flex-direction: column;
+    padding: 2rem;
+  }
+}

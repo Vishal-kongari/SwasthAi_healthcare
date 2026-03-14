@@ -80,9 +80,13 @@ const MainDashboard = () => {
         </header>
 
         {/* Call to action */}
-        <div className="vitals-btn-container">
+        <div className="vitals-btn-container" style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
           <Link to="/login" className="btn-vitals" style={{ padding: '16px 36px', fontSize: '18px' }}>
-            Get Started
+            Patient Login
+            <ArrowRight className="btn-icon" size={24} />
+          </Link>
+          <Link to="/hospital/login" className="btn-vitals" style={{ padding: '16px 36px', fontSize: '18px', background: 'linear-gradient(135deg, #10b981, #34d399)' }}>
+            Hospital Portal
             <ArrowRight className="btn-icon" size={24} />
           </Link>
         </div>

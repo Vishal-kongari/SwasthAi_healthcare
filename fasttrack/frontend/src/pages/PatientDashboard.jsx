@@ -1,12 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Activity, Stethoscope, Brain, ArrowRight } from 'lucide-react';
+import { Activity, Stethoscope, Brain, ArrowRight, FileText, Download } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { db } from '../firebase';
+import { ref, onValue } from 'firebase/database';
 import './LandingPage.css'; // Reusing the same CSS for the blobs and cards
 
 export default function PatientDashboard() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const [reports, setReports] = useState([]);
 
   useEffect(() => {
     if (!currentUser) {
@@ -14,7 +17,22 @@ export default function PatientDashboard() {
     }
   }, [currentUser, navigate]);
 
-  if (!currentUser) return null;
+  useEffect(() => {
+    if (!currentUser || !currentUser.email) return;
+    const reportsRef = ref(db, 'reports');
+    onValue(reportsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const parsedList = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+        const patientReports = parsedList.filter(r => r.patientEmail === currentUser.email.toLowerCase());
+        setReports(patientReports);
+      } else {
+        setReports([]);
+      }
+    });
+  }, [currentUser]);
+
+  if (!currentUser) return <div style={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Redirecting...</div>;
 
   return (
     <div className="swasth-dashboard">
@@ -76,6 +94,35 @@ export default function PatientDashboard() {
             </div>
           </div>
 
+        </div>
+
+        {/* Reports Section */}
+        <div style={{ marginTop: '40px', background: 'white', padding: '2rem', borderRadius: '1rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <FileText size={24} color="#ec4899" />
+            My Lab & Hospital Reports
+          </h2>
+          {reports.length === 0 ? (
+            <p style={{ color: '#6b7280' }}>No reports uploaded by your hospital yet.</p>
+          ) : (
+            <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+              {reports.map(report => (
+                <div key={report.id} style={{ border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1rem', background: '#f9fafb' }}>
+                  <h4 style={{ margin: '0 0 0.5rem 0', color: '#111827' }}>{report.title}</h4>
+                  <p style={{ margin: '0 0 1rem 0', color: '#4b5563', fontSize: '0.9rem' }}>
+                    Uploaded by: {report.doctorName}
+                  </p>
+                  <a 
+                    href={report.fileBase64} 
+                    download={`${report.title}.pdf`} 
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#ec4899', color: 'white', padding: '8px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.9rem' }}
+                  >
+                    <Download size={16} /> View / Download
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
