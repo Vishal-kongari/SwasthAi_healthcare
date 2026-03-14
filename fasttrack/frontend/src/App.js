@@ -12,6 +12,9 @@ import HospitalDashboard from './pages/HospitalDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 import Profile from './pages/Profile';
 import AIDiagnosis from './pages/AIDiagnosis';
+import IntelligenceEmergency from './pages/IntelligenceEmergency';
+import DoctorsList from './pages/DoctorsList';
+import DoctorsLogin from './pages/DoctorsLogin';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 
@@ -32,7 +35,10 @@ export default function App() {
           <Route path="/vitals" element={<Dashboard />} />
           <Route path="/dashboard" element={<PatientDashboard />} />
           <Route path="/ai-diagnosis" element={<AIDiagnosis />} />
+          <Route path="/intelligence-emergency" element={<IntelligenceEmergency />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/doctors-login" element={<DoctorsLogin />} />
+          <Route path="/doctors" element={<DoctorsList />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </AuthProvider>

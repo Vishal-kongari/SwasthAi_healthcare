@@ -6,7 +6,8 @@ import {
   ShieldCheck,
   Stethoscope,
   GitBranch,
-  ArrowRight
+  ArrowRight,
+  Users
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import './LandingPage.css';
@@ -80,7 +81,7 @@ const MainDashboard = () => {
         </header>
 
         {/* Call to action */}
-        <div className="vitals-btn-container" style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+        <div className="vitals-btn-container" style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link to="/login" className="btn-vitals" style={{ padding: '16px 36px', fontSize: '18px' }}>
             Patient Login
             <ArrowRight className="btn-icon" size={24} />
@@ -88,6 +89,10 @@ const MainDashboard = () => {
           <Link to="/hospital/login" className="btn-vitals" style={{ padding: '16px 36px', fontSize: '18px', background: 'linear-gradient(135deg, #10b981, #34d399)' }}>
             Hospital Portal
             <ArrowRight className="btn-icon" size={24} />
+          </Link>
+          <Link to="/doctors-login" className="btn-vitals" style={{ padding: '16px 36px', fontSize: '18px', background: 'linear-gradient(135deg, #f59e0b, #fbbf24)' }}>
+            Doctors Directory
+            <Users className="btn-icon" size={24} />
           </Link>
         </div>
 

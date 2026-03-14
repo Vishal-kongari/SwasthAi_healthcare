@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Activity, Stethoscope, Brain, ArrowRight, FileText, Download } from 'lucide-react';
+import { Activity, Stethoscope, Brain, ArrowRight, FileText, Download, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
 import { ref, onValue } from 'firebase/database';

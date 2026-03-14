@@ -239,6 +239,156 @@
   transform: rotate(-15deg);
 }
 
+/* ---- Patient Search Styles ---- */
+
+.patient-search-section {
+  margin-top: 40px;
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  grid-column: 1 / -1;
+}
+
+.patient-search-header {
+  margin-bottom: 25px;
+}
+
+.patient-search-header h2 {
+  font-size: 1.5rem;
+  color: #1f2937;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.patient-search-header p {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.search-bar-container {
+  display: flex;
+  align-items: center;
+  background: #f3f4f6;
+  border-radius: 12px;
+  padding: 15px 20px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.search-bar-container:focus-within {
+  border-color: #3b82f6;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.patient-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 5px 15px;
+  font-size: 1.1rem;
+  color: #1f2937;
+  outline: none;
+  width: 100%;
+}
+
+.patient-search-input::placeholder {
+  color: #9ca3af;
+}
+
+.search-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+  animation: fadeIn 0.3s ease;
+}
+
+.no-results-msg {
+  padding: 20px;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-top: 20px;
+  font-size: 1rem;
+}
+
+.patient-result-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.patient-result-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 10px rgba(59,130,246,0.1);
+  transform: translateY(-2px);
+}
+
+.patient-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.patient-avatar.placeholder {
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.patient-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.patient-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 1.05rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.patient-email {
+  font-size: 0.85rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.patient-age {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #059669;
+  background: #d1fae5;
+  padding: 2px 8px;
+  border-radius: 12px;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @media (max-width: 768px) {
   .doc-header {
     flex-direction: column;
