@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './Auth.css';
 
-export default function Login() {
+export default function HospitalLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,20 +16,8 @@ export default function Login() {
     try {
       setError('');
       setLoading(true);
-      const userCred = await login(email, password);
-      
-      // Assume the user logged in successfully. 
-      // Fetch their role.
-      const db = (await import('../firebase')).db;
-      const { ref, get } = await import('firebase/database');
-      
-      const userRef = ref(db, `users/${userCred.user.uid}`);
-      const snap = await get(userRef);
-      if (snap.exists() && snap.val().role === 'doctor') {
-        navigate('/doctor/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      await login(email, password);
+      navigate('/hospital/dashboard');
     } catch (err) {
       setError('Failed to sign in. Check email and password.');
     } finally {
@@ -40,7 +28,7 @@ export default function Login() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>Login to SwasthAi</h2>
+        <h2>Hospital Portal Login</h2>
         {error && <div className="auth-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -66,7 +54,7 @@ export default function Login() {
           </button>
         </form>
         <div className="auth-links">
-          Don't have an account? <Link to="/signup">Sign Up</Link>
+          Not registered? <Link to="/hospital/signup">Sign Up</Link>
         </div>
       </div>
     </div>
