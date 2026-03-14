@@ -53,7 +53,7 @@ export default function Navbar() {
           {currentUser ? (
             <div className="user-menu">
               <span className="user-role-badge">
-                {userRole === 'doctor' ? '👨‍⚕️ Doctor' : userRole === 'hospital' ? '🏥 Hospital' : '👤 Patient'}
+                {userRole === 'doctor' ? '👨‍⚕️ Doctor' : userRole === 'hospital' ? '🏥 Hospital' : userRole === 'auditor' ? '👤 Doctor Admin' : '👤 Patient'}
               </span>
               <Link to="/profile" className="profile-btn-nav" title="My Profile">
                 {dp ? <img src={dp} alt="Profile" className="nav-dp" /> : <User size={18} />}

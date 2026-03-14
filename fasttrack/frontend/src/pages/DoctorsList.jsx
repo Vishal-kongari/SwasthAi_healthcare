@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ref, get } from 'firebase/database';
 import { db } from '../firebase';
-import { Stethoscope, User, MapPin, LogOut, Search, X, Mail, Phone, GraduationCap, Briefcase } from 'lucide-react';
+import { Stethoscope, User, MapPin, LogOut, Search, X, Mail, Phone, GraduationCap, Briefcase, Activity, Droplets, Weight } from 'lucide-react';
 import './DoctorsList.css';
 
 const DoctorsList = () => {
@@ -47,6 +47,12 @@ const DoctorsList = () => {
                name: userData.name || userData.email || 'Unnamed Patient',
                email: userData.email || '',
                age: userData.age || 'N/A',
+               gender: userData.gender || 'N/A',
+               bloodGroup: userData.bloodGroup || 'N/A',
+               weight: userData.weight || 'N/A',
+               phone: userData.phone || 'N/A',
+               recentDiseases: userData.recentDiseases || 'None',
+               medicalHistory: userData.medicalHistory || 'None',
                displayPicture: userData.displayPicture || null
              });
           }
@@ -289,20 +295,46 @@ const DoctorsList = () => {
                     </div>
                   </div>
                   <div className="detail-item">
-                    <User size={20} color="#f43f5e" />
+                    <Phone size={20} color="#f43f5e" />
                     <div className="detail-content">
-                      <label>Patient Age</label>
-                      <span>{selectedProfile.age} yrs</span>
+                      <label>Phone Number</label>
+                      <span>{selectedProfile.phone}</span>
                     </div>
                   </div>
-                  {selectedProfile.id && (
-                    <div className="detail-item">
-                      <div className="detail-content">
-                        <label>Patient ID</label>
-                        <span className="mono-text">{selectedProfile.id}</span>
-                      </div>
+                  <div className="detail-item">
+                    <User size={20} color="#f43f5e" />
+                    <div className="detail-content">
+                      <label>Age & Gender</label>
+                      <span>{selectedProfile.age} yrs | {selectedProfile.gender}</span>
                     </div>
-                  )}
+                  </div>
+                  <div className="detail-item">
+                    <Droplets size={20} color="#ef4444" />
+                    <div className="detail-content">
+                      <label>Blood Group</label>
+                      <span>{selectedProfile.bloodGroup}</span>
+                    </div>
+                  </div>
+                  <div className="detail-item">
+                    <Weight size={20} color="#3b82f6" />
+                    <div className="detail-content">
+                      <label>Weight</label>
+                      <span>{selectedProfile.weight} kg</span>
+                    </div>
+                  </div>
+                  <div className="detail-item">
+                    <Activity size={20} color="#10b981" />
+                    <div className="detail-content">
+                      <label>Recent Diseases</label>
+                      <span>{selectedProfile.recentDiseases}</span>
+                    </div>
+                  </div>
+                  <div className="detail-item full-width">
+                     <div className="detail-content">
+                        <label>Medical History</label>
+                        <p style={{ margin: '5px 0 0 0', fontSize: '0.9rem', color: '#4b5563', lineHeight: '1.4' }}>{selectedProfile.medicalHistory}</p>
+                     </div>
+                  </div>
                 </>
               )}
             </div>

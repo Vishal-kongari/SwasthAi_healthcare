@@ -225,7 +225,7 @@
 .profile-modal-content {
   background: white;
   width: 100%;
-  max-width: 550px;
+  max-width: 650px;
   border-radius: 24px;
   position: relative;
   overflow: hidden;
@@ -361,6 +361,12 @@
   font-size: 1rem;
   font-weight: 600;
   color: #334155;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
 }
 
 .mono-text {
