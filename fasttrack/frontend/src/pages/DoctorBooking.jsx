@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
 import { ref, get, push, set, onValue, update } from 'firebase/database';
-import { Calendar, Clock, User, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, Clock, User, CheckCircle, XCircle, Award, Briefcase, Phone, Mail, X } from 'lucide-react';
 import './DoctorBooking.css';
 
 export default function DoctorBooking() {
@@ -10,6 +10,9 @@ export default function DoctorBooking() {
   const [doctors, setDoctors] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [hospitalsMap, setHospitalsMap] = useState({});
 
   useEffect(() => {
     if (!currentUser) return;
@@ -20,9 +23,26 @@ export default function DoctorBooking() {
       get(usersRef).then((snapshot) => {
         if (snapshot.exists()) {
           const docs = [];
+          const hMap = {};
+          
+          // First pass: Build hospital map
           snapshot.forEach(child => {
-            if (child.val().role === 'doctor') {
-              docs.push({ id: child.key, ...child.val() });
+            const val = child.val();
+            if (val.role === 'hospital') {
+              hMap[child.key] = val.name || 'Unknown Hospital';
+            }
+          });
+          setHospitalsMap(hMap);
+
+          // Second pass: Get doctors and link hospital names
+          snapshot.forEach(child => {
+            const val = child.val();
+            if (val.role === 'doctor') {
+              docs.push({ 
+                id: child.key, 
+                ...val,
+                hospitalName: val.selectedHospital ? hMap[val.selectedHospital] : 'Independent Practice'
+              });
             }
           });
           setDoctors(docs);
@@ -129,13 +149,22 @@ export default function DoctorBooking() {
             <div className="doctors-grid">
               {doctors.map(doc => (
                 <div key={doc.id} className="doctor-card">
-                  <div className="doc-icon"><User size={32} /></div>
+                  <div className="doc-icon">
+                    {doc.displayPicture ? (
+                      <img src={doc.displayPicture} alt={doc.name} style={{width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover'}} />
+                    ) : (
+                      <User size={32} />
+                    )}
+                  </div>
                   <div className="doc-info">
                     <h3>Dr. {doc.name || 'Specialist'}</h3>
-                    <p className="doc-specialty">General Practitioner</p>
+                    <p className="doc-specialty">{doc.specialty || 'General Practitioner'}</p>
+                    <p className="doc-hospital" style={{fontSize: '0.85rem', color: '#3b82f6', fontWeight: '600', marginBottom: '15px'}}>
+                      🏥 {doc.hospitalName}
+                    </p>
                   </div>
-                  <button className="book-btn" onClick={() => bookAppointment(doc.id, doc.name || doc.email)}>
-                    Request Booking
+                  <button className="book-btn" onClick={() => { setSelectedDoctor(doc); setShowModal(true); }}>
+                    View Profile & Book
                   </button>
                 </div>
               ))}
@@ -202,6 +231,87 @@ export default function DoctorBooking() {
           </div>
         )}
       </div>
+
+      {/* Doctor Profile Modal */}
+      {showModal && selectedDoctor && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content doctor-profile-modal" onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowModal(false)}><X size={24} /></button>
+            <div className="modal-header">
+              <div className="modal-dp">
+                {selectedDoctor.displayPicture ? (
+                  <img src={selectedDoctor.displayPicture} alt={selectedDoctor.name} />
+                ) : (
+                  <User size={64} color="#64748b" />
+                )}
+              </div>
+              <div className="modal-title">
+                <h2>Dr. {selectedDoctor.name || 'Specialist'}</h2>
+                <p className="modal-specialty">{selectedDoctor.specialty || 'General Practitioner'}</p>
+              </div>
+            </div>
+
+            <div className="modal-body">
+              <div className="info-grid">
+                <div className="info-item">
+                  <Award size={20} color="#8b5cf6" />
+                  <div>
+                    <label>Degree / Qualification</label>
+                    <p>{selectedDoctor.degree || 'MBBS'}</p>
+                  </div>
+                </div>
+                <div className="info-item">
+                  <Briefcase size={20} color="#3b82f6" />
+                  <div>
+                    <label>Specialty</label>
+                    <p>{selectedDoctor.specialty || 'General Practitioner'}</p>
+                  </div>
+                </div>
+                <div className="info-item">
+                  <Phone size={20} color="#10b981" />
+                  <div>
+                    <label>Contact Number</label>
+                    <p>{selectedDoctor.phone || 'Contact not provided'}</p>
+                  </div>
+                </div>
+                <div className="info-item">
+                  <Mail size={20} color="#ec4899" />
+                  <div>
+                    <label>Email Address</label>
+                    <p>{selectedDoctor.email || 'Email not provided'}</p>
+                  </div>
+                </div>
+                <div className="info-item" style={{gridColumn: 'span 2'}}>
+                  <Briefcase size={20} color="#3b82f6" />
+                  <div>
+                    <label>Affiliated Hospital</label>
+                    <p style={{color: '#3b82f6', fontWeight: '700'}}>{selectedDoctor.hospitalName}</p>
+                  </div>
+                </div>
+              </div>
+
+              {selectedDoctor.about && (
+                <div className="info-section">
+                  <label>About Doctor</label>
+                  <p>{selectedDoctor.about}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button 
+                className="btn-confirm-booking" 
+                onClick={() => {
+                  bookAppointment(selectedDoctor.id, selectedDoctor.name || selectedDoctor.email);
+                  setShowModal(false);
+                }}
+              >
+                Confirm Appointment Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
