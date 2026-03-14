@@ -11,7 +11,7 @@ export default function ConnectBanner({ connected, onLogout }) {
       const url = await getAuthUrl();
       window.location.href = url;
     } catch {
-      alert('Could not connect. Make sure the backend is running on port 5000.');
+      alert('Could not connect. Make sure the backend is running on port 5001.');
       setConnecting(false);
     }
   };

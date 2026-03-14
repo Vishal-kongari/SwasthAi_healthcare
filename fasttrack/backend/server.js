@@ -29,7 +29,7 @@ const database = getDatabase(firebaseApp);
 const activeSyncs = new Map();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -47,7 +47,7 @@ app.use(session({
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5000/auth/callback'
+  process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5001/auth/callback'
 );
 
 const SCOPES = [
@@ -276,7 +276,7 @@ async function startBackgroundSync(tokens) {
     const auth = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5000/auth/callback'
+      process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5001/auth/callback'
     );
     auth.setCredentials(tokens);
 

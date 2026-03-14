@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getAllHealth, getWeeklySteps, getAuthStatus } from '../api/healthApi';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
 const OFFLINE_DEMO = {
   steps: 8432, heartRate: 72, oxygen: 98, calories: 337, distance: 5.9,
