@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Activity,
   Brain,
@@ -8,9 +8,19 @@ import {
   GitBranch,
   ArrowRight
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import './LandingPage.css';
 
 const MainDashboard = () => {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/dashboard');
+    }
+  }, [currentUser, navigate]);
+
   const modules = [
     {
       title: "AI Diagnostic Module",
@@ -69,10 +79,10 @@ const MainDashboard = () => {
           </div>
         </header>
 
-        {/* Vitals Button Navigation */}
+        {/* Call to action */}
         <div className="vitals-btn-container">
-          <Link to="/vitals" className="btn-vitals">
-            Vitals
+          <Link to="/login" className="btn-vitals" style={{ padding: '16px 36px', fontSize: '18px' }}>
+            Get Started
             <ArrowRight className="btn-icon" size={24} />
           </Link>
         </div>

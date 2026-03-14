@@ -25,7 +25,7 @@ export default function Navbar() {
           SwasthAi
         </Link>
         <div className="navbar-links">
-          <Link to="/" className="nav-link">Home</Link>
+          <Link to={currentUser ? "/dashboard" : "/"} className="nav-link">Home</Link>
           <Link to="/vitals" className="nav-link">Vitals</Link>
           <Link to="/booking" className="nav-link">Doctor Booking</Link>
         </div>
