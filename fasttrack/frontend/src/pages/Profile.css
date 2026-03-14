@@ -142,3 +142,16 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.profile-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 480px) {
+  .profile-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

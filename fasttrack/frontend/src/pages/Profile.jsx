@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
 import { ref, get, set, update, onValue } from 'firebase/database';
-import { User, Image as ImageIcon, Briefcase, Award } from 'lucide-react';
+import { User, Image as ImageIcon, Briefcase, Award, Droplets, Activity, Thermometer, Weight } from 'lucide-react';
 import './Profile.css';
 
 export default function Profile() {
@@ -19,6 +19,10 @@ export default function Profile() {
     selectedHospital: '',
     // Patient specific fields
     age: '',
+    gender: '',
+    bloodGroup: '',
+    weight: '',
+    recentDiseases: '',
     medicalHistory: ''
   });
 
@@ -165,17 +169,61 @@ export default function Profile() {
 
           {userRole === 'patient' && (
             <>
-              <div className="form-group">
-                <label>Age</label>
-                <input type="number" name="age" value={profileData.age || ''} onChange={handleChange} />
+              <div className="profile-row">
+                <div className="form-group">
+                  <label>Age</label>
+                  <input type="number" name="age" value={profileData.age || ''} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label>Gender</label>
+                  <select name="gender" value={profileData.gender || ''} onChange={handleChange}>
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
               </div>
+
+              <div className="profile-row">
+                <div className="form-group">
+                  <label><Droplets size={16} color="#ef4444" /> Blood Group</label>
+                  <select name="bloodGroup" value={profileData.bloodGroup || ''} onChange={handleChange}>
+                    <option value="">Select Blood Group</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label><Weight size={16} color="#3b82f6" /> Weight (kg)</label>
+                  <input type="number" name="weight" value={profileData.weight || ''} onChange={handleChange} placeholder="e.g. 70" />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label><Activity size={16} color="#10b981" /> Recent Diseases / Conditions</label>
+                <input 
+                  type="text" 
+                  name="recentDiseases" 
+                  value={profileData.recentDiseases || ''} 
+                  onChange={handleChange} 
+                  placeholder="e.g. Flu, Viral Fever, etc." 
+                />
+              </div>
+
               <div className="form-group">
                 <label>Medical History (Optional)</label>
                 <textarea 
                   name="medicalHistory" 
                   value={profileData.medicalHistory || ''} 
                   onChange={handleChange}
-                  placeholder="Any prior conditions, allergies, etc."
+                  placeholder="Any chronic conditions, allergies, or long-term medications."
                   rows="4"
                 />
               </div>
