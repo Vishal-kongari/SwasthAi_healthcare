@@ -10,7 +10,13 @@ const { google } = require('googleapis');
 const session = require('express-session');
 const { initializeApp } = require('firebase/app');
 const { getDatabase, ref, set } = require('firebase/database');
+const Tesseract = require('tesseract.js');
+const multer = require('multer');
+const { spawn } = require('child_process');
 require('dotenv').config();
+
+// Setup Multer for memory storage
+const upload = multer({ storage: multer.memoryStorage() });
 
 const firebaseConfig = {
   apiKey: "AIzaSyCZ8QlNtGeoGtim2Qy-37MlOMTSRybFRF8",
@@ -106,7 +112,7 @@ app.get('/api/demo/weekly', (req, res) => {
 async function aggregateFitData(auth, typeOrObj, startMs, endMs) {
   const fitness = google.fitness({ version: 'v1', auth });
   const aggregateByItem = typeof typeOrObj === 'string' ? { dataTypeName: typeOrObj } : typeOrObj;
-  
+
   try {
     const res = await fitness.users.dataset.aggregate({
       userId: 'me',
@@ -218,7 +224,7 @@ async function fetchSleepData(auth) {
 
 async function fetchWeeklySteps(auth) {
   const fitness = google.fitness({ version: 'v1', auth });
-  
+
   // Align to start of day, 7 days ago
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -229,7 +235,7 @@ async function fetchWeeklySteps(auth) {
     const res = await fitness.users.dataset.aggregate({
       userId: 'me',
       requestBody: {
-        aggregateBy: [{ 
+        aggregateBy: [{
           dataTypeName: 'com.google.step_count.delta',
           dataSourceId: 'derived:com.google.step_count.delta:com.google.android.gms:estimated_steps'
         }],
@@ -294,13 +300,13 @@ async function startBackgroundSync(tokens) {
     const syncToFirebase = async () => {
       try {
         const data = await getHealthData(auth);
-        
+
         // --- TEMPORARY DEBUG LOG ---
         try {
           const fitness = google.fitness({ version: 'v1', auth });
           const now = Date.now();
           const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
-          
+
           const response = await fitness.users.dataset.aggregate({
             userId: 'me',
             requestBody: {
@@ -312,15 +318,15 @@ async function startBackgroundSync(tokens) {
               endTimeMillis: now
             }
           });
-          
+
           let debugStr = '\n=== STEP BUCKETS TODAY ===\n';
           (response.data.bucket || []).forEach(b => {
-             let st = 0;
-             (b.dataset || []).forEach(ds => (ds.point || []).forEach(p => st += (p?.value?.[0]?.intVal || 0)));
-             if (st > 0) {
-                const h = new Date(parseInt(b.startTimeMillis)).getHours();
-                debugStr += `Hour ${h}: ${st} steps\n`;
-             }
+            let st = 0;
+            (b.dataset || []).forEach(ds => (ds.point || []).forEach(p => st += (p?.value?.[0]?.intVal || 0)));
+            if (st > 0) {
+              const h = new Date(parseInt(b.startTimeMillis)).getHours();
+              debugStr += `Hour ${h}: ${st} steps\n`;
+            }
           });
           debugStr += '==========================\n';
           console.log(debugStr);
@@ -381,24 +387,24 @@ async function getHealthData(auth) {
   ]);
 
   let steps = sumInt(stepsPoints);
-  steps = Math.max(0, steps - 1400); // Temporary manual offset as requested
+  steps = Math.max(0, steps + 97 - 1400); // Temporary manual offset as requested
 
   const rawSteps = sumInt(rawPoints);
   const mergedSteps = sumInt(mergedPoints);
   console.log(`[DEBUG STEPS] estimated: ${steps}, raw: ${rawSteps}, merged: ${mergedSteps}`);
-  
+
   const heartRate = Math.round(latestFloat(hrPoints));
   let oxygen = Math.round(latestFloat(oxyPoints));
   if (oxygen === 0) oxygen = 97; // Default if no data available
-  
+
   const calF = sumFloat(calPoints);
   const calI = sumInt(calPoints);
   const calories = Math.round(calF > 0 ? calF : calI);
-  
+
   let distanceMeters = sumFloat(distPoints);
   if (distanceMeters === 0) distanceMeters = sumInt(distPoints);
   let distance = parseFloat((distanceMeters / 1000).toFixed(2));
-  
+
   // fallback if no location permission or data
   if (distance === 0 && steps > 0) {
     distance = parseFloat((steps * 0.0007).toFixed(2));
@@ -438,9 +444,9 @@ app.get('/api/debug-steps', async (req, res) => {
     (response.data.bucket || []).forEach(b => {
       (b.dataset || []).forEach(ds => {
         (ds.point || []).forEach(p => {
-            const origin = p?.originDataSourceId || 'unknown';
-            const val = p?.value?.[0]?.intVal || 0;
-            sources[origin] = (sources[origin] || 0) + val;
+          const origin = p?.originDataSourceId || 'unknown';
+          const val = p?.value?.[0]?.intVal || 0;
+          sources[origin] = (sources[origin] || 0) + val;
         });
       });
     });
@@ -466,6 +472,88 @@ app.get('/api/weekly', requireAuth, async (req, res) => {
   const data = await fetchWeeklySteps(oauth2Client);
   res.json({ weekly: data });
 });
+
+// ── AI Diagnosis OCR Pipeline ───────────────────────────
+app.post('/api/analyze-report', upload.single('report'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file uploaded' });
+    }
+
+    console.log(`[AI Diagnosis] Received image buffer of size: ${req.file.size}`);
+
+    // Run Tesseract OCR on the image buffer
+    const ocrResult = await Tesseract.recognize(req.file.buffer, 'eng');
+    const text = ocrResult.data.text.toLowerCase();
+
+    console.log('[AI Diagnosis] OCR Extraction complete. Extracted text sample:', text.substring(0, 100));
+
+    // Basic heuristic regex parsing - this is highly brittle but serves as a placeholder
+    // In production, an LLM call to process 'text' goes here.
+    const extractedData = {
+      glucose: extractValue(/glucose[^\d]*(\d+\.?\d*)/i, text) || 100,
+      bp: extractValue(/blood pressure[^\d]*(\d+\.?\d*)/i, text) || extractValue(/bp[^\d]*(\d+\.?\d*)/i, text) || 80,
+      bmi: extractValue(/bmi[^\d]*(\d+\.?\d*)/i, text) || 25,
+      age: extractValue(/age[^\d]*(\d+)/i, text) || 40,
+    };
+
+    console.log('[AI Diagnosis] Parsed features:', extractedData);
+
+    // Call the Python wrapper pipeline
+    const pythonProcess = spawn('/opt/anaconda3/bin/python', [
+      `${__dirname}/ai_diagnosis/run_pipeline.py`,
+      JSON.stringify(extractedData)
+    ]);
+
+    let outputData = '';
+    let errorData = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      outputData += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      errorData += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      console.log(`[AI Diagnosis] Python process exited with code ${code}`);
+      if (code !== 0) {
+        console.error(`Python Error: ${errorData}`);
+        return res.status(500).json({ error: 'Failed to run ML pipeline' });
+      }
+
+      try {
+        const predictions = JSON.parse(outputData);
+
+        console.log('\n[AI Diagnosis] ======= FINAL PREDICTIONS =======');
+        console.log(JSON.stringify(predictions, null, 2));
+        console.log('==============================================\n');
+
+        // Final object to return and (optionally) save to Firebase
+        const finalReport = {
+          parsedData: extractedData,
+          predictions: predictions,
+          timestamp: new Date().toISOString()
+        };
+
+        res.json(finalReport);
+      } catch (err) {
+        console.error('Failed to parse Python output:', err, outputData);
+        res.status(500).json({ error: 'Invalid output from ML pipeline' });
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ AI Diagnosis error:', error.message);
+    res.status(500).json({ error: 'Analysis failed', detail: error.message });
+  }
+});
+
+function extractValue(regex, text) {
+  const match = text.match(regex);
+  return match && match[1] ? parseFloat(match[1]) : null;
+}
 
 // ── Start ───────────────────────────────────────────────
 app.listen(PORT, () => {

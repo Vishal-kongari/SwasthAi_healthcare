@@ -80,17 +80,18 @@ export default function PatientDashboard() {
             </div>
           </div>
 
-          {/* AI Diagnostics (Coming Soon Placeholder) */}
+          {/* AI Diagnostics Module */}
           <div className="module-card delay-3">
             <div className="card-icon-wrapper">
               <Brain size={28} color="#3b82f6" />
             </div>
             <h3 className="module-title">AI Diagnostics</h3>
-            <p className="module-desc">Input your symptoms to receive instant AI-powered preliminary assessments (Coming Soon).</p>
+            <p className="module-desc">Upload reports to receive instant AI-powered preliminary assessments using our specialized ML models.</p>
             <div style={{ marginTop: '20px' }}>
-              <button disabled className="btn-vitals" style={{ display: 'inline-flex', padding: '10px 20px', fontSize: '15px', background: '#cbd5e1', cursor: 'not-allowed', color: '#64748b' }}>
-                Coming Soon
-              </button>
+              <Link to="/ai-diagnosis" className="btn-vitals" style={{ display: 'inline-flex', padding: '10px 20px', fontSize: '15px', background: 'linear-gradient(135deg, #3b82f6, #ec4899)' }}>
+                Upload Report
+                <ArrowRight className="btn-icon" size={20} />
+              </Link>
             </div>
           </div>
 

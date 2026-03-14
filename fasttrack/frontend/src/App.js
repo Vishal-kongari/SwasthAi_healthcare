@@ -11,6 +11,7 @@ import HospitalSignup from './pages/HospitalSignup';
 import HospitalDashboard from './pages/HospitalDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 import Profile from './pages/Profile';
+import AIDiagnosis from './pages/AIDiagnosis';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/booking" element={<DoctorBooking />} />
           <Route path="/vitals" element={<Dashboard />} />
           <Route path="/dashboard" element={<PatientDashboard />} />
+          <Route path="/ai-diagnosis" element={<AIDiagnosis />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
