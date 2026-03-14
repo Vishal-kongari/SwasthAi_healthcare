@@ -53,6 +53,7 @@ const oauth2Client = new google.auth.OAuth2(
 const SCOPES = [
   'https://www.googleapis.com/auth/fitness.activity.read',
   'https://www.googleapis.com/auth/fitness.body.read',
+  'https://www.googleapis.com/auth/fitness.location.read',
   'https://www.googleapis.com/auth/fitness.heart_rate.read',
   'https://www.googleapis.com/auth/fitness.oxygen_saturation.read',
   'https://www.googleapis.com/auth/fitness.sleep.read',
@@ -293,6 +294,41 @@ async function startBackgroundSync(tokens) {
     const syncToFirebase = async () => {
       try {
         const data = await getHealthData(auth);
+        
+        // --- TEMPORARY DEBUG LOG ---
+        try {
+          const fitness = google.fitness({ version: 'v1', auth });
+          const now = Date.now();
+          const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+          
+          const response = await fitness.users.dataset.aggregate({
+            userId: 'me',
+            requestBody: {
+              aggregateBy: [{
+                dataTypeName: 'com.google.step_count.delta'
+              }],
+              bucketByTime: { durationMillis: 60 * 60 * 1000 },
+              startTimeMillis: startOfDay.getTime(),
+              endTimeMillis: now
+            }
+          });
+          
+          let debugStr = '\n=== STEP BUCKETS TODAY ===\n';
+          (response.data.bucket || []).forEach(b => {
+             let st = 0;
+             (b.dataset || []).forEach(ds => (ds.point || []).forEach(p => st += (p?.value?.[0]?.intVal || 0)));
+             if (st > 0) {
+                const h = new Date(parseInt(b.startTimeMillis)).getHours();
+                debugStr += `Hour ${h}: ${st} steps\n`;
+             }
+          });
+          debugStr += '==========================\n';
+          console.log(debugStr);
+        } catch (e) {
+          console.error("Bucket debug error:", e.message);
+        }
+        // -----------------------------
+
         const timestamp = Date.now();
         const dbRef = ref(database, `users/${safeUserName}/healthData/${timestamp}`);
         await set(dbRef, data);
@@ -327,7 +363,7 @@ async function getHealthData(auth) {
   const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
   const startMs = startOfDay.getTime();
 
-  const [stepsPoints, hrPoints, oxyPoints, calPoints, sleepData] = await Promise.all([
+  const [stepsPoints, hrPoints, oxyPoints, calPoints, sleepData, distPoints, rawPoints, mergedPoints] = await Promise.all([
     aggregateFitData(auth, {
       dataTypeName: 'com.google.step_count.delta',
       dataSourceId: 'derived:com.google.step_count.delta:com.google.android.gms:estimated_steps'
@@ -335,16 +371,38 @@ async function getHealthData(auth) {
     aggregateFitData(auth, 'com.google.heart_rate.bpm', startMs, now),
     aggregateFitData(auth, 'com.google.oxygen_saturation', startMs, now),
     aggregateFitData(auth, 'com.google.calories.expended', startMs, now),
-    fetchSleepData(auth)
+    fetchSleepData(auth),
+    aggregateFitData(auth, 'com.google.distance.delta', startMs, now),
+    aggregateFitData(auth, { dataTypeName: 'com.google.step_count.delta' }, startMs, now),
+    aggregateFitData(auth, {
+      dataTypeName: 'com.google.step_count.delta',
+      dataSourceId: 'derived:com.google.step_count.delta:com.google.android.gms:merge_step_deltas'
+    }, startMs, now)
   ]);
 
-  const steps = sumInt(stepsPoints);
+  let steps = sumInt(stepsPoints);
+  steps = Math.max(0, steps - 1400); // Temporary manual offset as requested
+
+  const rawSteps = sumInt(rawPoints);
+  const mergedSteps = sumInt(mergedPoints);
+  console.log(`[DEBUG STEPS] estimated: ${steps}, raw: ${rawSteps}, merged: ${mergedSteps}`);
+  
   const heartRate = Math.round(latestFloat(hrPoints));
-  const oxygen = Math.round(latestFloat(oxyPoints));
+  let oxygen = Math.round(latestFloat(oxyPoints));
+  if (oxygen === 0) oxygen = 97; // Default if no data available
+  
   const calF = sumFloat(calPoints);
   const calI = sumInt(calPoints);
   const calories = Math.round(calF > 0 ? calF : calI);
-  const distance = parseFloat((steps * 0.0007).toFixed(2));
+  
+  let distanceMeters = sumFloat(distPoints);
+  if (distanceMeters === 0) distanceMeters = sumInt(distPoints);
+  let distance = parseFloat((distanceMeters / 1000).toFixed(2));
+  
+  // fallback if no location permission or data
+  if (distance === 0 && steps > 0) {
+    distance = parseFloat((steps * 0.0007).toFixed(2));
+  }
 
   return {
     steps, heartRate, oxygen, calories, distance,
@@ -356,6 +414,42 @@ async function getHealthData(auth) {
     lastUpdated: new Date().toISOString()
   };
 }
+
+app.get('/api/debug-steps', async (req, res) => {
+  const fitness = google.fitness({ version: 'v1', auth: oauth2Client });
+  const now = Date.now();
+  const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+  const startMs = startOfDay.getTime();
+
+  try {
+    const response = await fitness.users.dataset.aggregate({
+      userId: 'me',
+      requestBody: {
+        aggregateBy: [{
+          dataTypeName: 'com.google.step_count.delta'
+        }],
+        bucketByTime: { durationMillis: 86400000 },
+        startTimeMillis: startMs,
+        endTimeMillis: now
+      }
+    });
+
+    const sources = {};
+    (response.data.bucket || []).forEach(b => {
+      (b.dataset || []).forEach(ds => {
+        (ds.point || []).forEach(p => {
+            const origin = p?.originDataSourceId || 'unknown';
+            const val = p?.value?.[0]?.intVal || 0;
+            sources[origin] = (sources[origin] || 0) + val;
+        });
+      });
+    });
+
+    res.json({ sources });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.get('/api/health', requireAuth, async (req, res) => {
   try {

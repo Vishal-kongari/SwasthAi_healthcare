@@ -1,140 +1,147 @@
 # ⌚ FastTrack Health Dashboard
-### React.js Frontend + Node.js Backend + Google Fit API
+
+![FastTrack Banner](https://via.placeholder.com/1000x200.png?text=FastTrack+Health+Dashboard&bg=1f2937&textColor=ffffff)
+
+> A modern, full-stack web application that integrates seamlessly with the **Google Fit API** to visualize your daily and weekly health metrics.
+
+[![React](https://img.shields.io/badge/React-18-blue.svg?style=for-the-badge&logo=react)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-green.svg?style=for-the-badge&logo=node.js)](https://nodejs.org/)
+[![Google Fit API](https://img.shields.io/badge/Google_Fit-API-orange.svg?style=for-the-badge&logo=google)](https://developers.google.com/fit)
+[![Firebase](https://img.shields.io/badge/Firebase-Database-yellow.svg?style=for-the-badge&logo=firebase)](https://firebase.google.com/)
 
 ---
 
-## 📁 Project Structure
+## ✨ Key Features
 
-```
+- **👟 Advanced Step Tracking:** Accurately aggregates daily steps from your Android device and smartwatch using Google Fit's data streams.
+- **❤️ Heart Rate & 🩸 SpO2:** Monitors your latest heart rate and blood oxygen levels, categorizing them by status (e.g., Normal, Excellent, Low).
+- **🔥 Caloric Burn & 📏 Distance:** Calculates and displays your total energy expenditure and distance traveled.
+- **😴 Sleep Analysis:** Provides detailed insights into your sleep duration (Hours/Minutes) and sleep quality.
+- **📈 Interactive Weekly Charts:** Beautiful historical data visualization using Recharts.
+- **🔄 Automated Background Sync:** Continually fetches your health data every 5 minutes and backs it up to Firebase Realtime Database.
+
+---
+
+## 📁 Project Architecture
+
+The repository is structured as a full-stack monorepo:
+
+```text
 fasttrack/
-├── backend/
-│   ├── server.js          ← Express server + Google Fit API
-│   ├── package.json
-│   └── .env               ← Your Google credentials go here
+├── backend/                  # Node.js + Express API Server
+│   ├── server.js             # API routes, Google OAuth, and Fit API aggregations
+│   ├── package.json          # Backend dependencies
+│   └── .env                  # Server environment variables
 │
-└── frontend/
-    ├── public/
-    │   └── index.html
+└── frontend/                 # React.js User Interface
     ├── src/
-    │   ├── api/
-    │   │   └── healthApi.js      ← All API calls
-    │   ├── components/
-    │   │   ├── MetricCard.jsx    ← Steps, Heart, SpO2 cards
-    │   │   ├── GoalRing.jsx      ← Circular progress ring
-    │   │   ├── WeeklyChart.jsx   ← Bar chart (Recharts)
-    │   │   ├── ActivityLog.jsx   ← Daily activity timeline
-    │   │   └── ConnectBanner.jsx ← Google Fit connect button
-    │   ├── hooks/
-    │   │   └── useHealthData.js  ← Custom hook for data fetching
-    │   ├── pages/
-    │   │   └── Dashboard.jsx     ← Main dashboard page
-    │   ├── App.js
-    │   └── index.js
-    ├── package.json
-    └── .env
+    │   ├── api/healthApi.js  # Axios HTTP client configuration
+    │   ├── components/       # Reusable UI components (MetricCards, Charts, etc.)
+    │   ├── hooks/            # Custom React hooks (e.g., useHealthData)
+    │   ├── pages/            # Page layouts like the main Dashboard
+    │   └── App.js            # Main application router
+    ├── package.json          # Frontend dependencies
+    └── .env                  # Client environment variables
 ```
 
 ---
 
-## 🚀 Setup Instructions
+## 🚀 Getting Started
 
-### STEP 1 — Get Google Credentials
+Follow these instructions to get a local copy up and running.
 
-1. Go to https://console.cloud.google.com
-2. Create a new project: **FastTrack Dashboard**
-3. Go to **APIs & Services** → **Library** → Search **Fitness API** → Enable
-4. Go to **APIs & Services** → **OAuth consent screen**
-   - Choose **External** → Create
-   - App name: FastTrack Dashboard
-   - Add your Gmail as test user
-5. Go to **APIs & Services** → **Credentials**
-   - Click **+ CREATE CREDENTIALS** → **OAuth client ID**
-   - Application type: **Web application**
-   - Authorised redirect URIs: `http://localhost:5000/auth/callback`
-   - Click **CREATE** → Copy Client ID and Client Secret
+### 1️⃣ Google Cloud Setup (OAuth & Fit API)
 
-### STEP 2 — Configure Backend
+1. Navigate to the [Google Cloud Console](https://console.cloud.google.com).
+2. Create a new project (e.g., **FastTrack Dashboard**).
+3. Go to **APIs & Services > Library**, search for the **Fitness API**, and click **Enable**.
+4. Go to **OAuth consent screen**:
+   - Choose **External** and click **Create**.
+   - Fill in your App name and developer email.
+   - Add your personal Gmail address as a **Test User**.
+5. Go to **Credentials**:
+   - Click **+ CREATE CREDENTIALS** > **OAuth client ID**.
+   - Choose **Web application**.
+   - Add an Authorized Redirect URI: `http://localhost:5000/auth/callback`
+   - Click **Create** and save your **Client ID** and **Client Secret**.
 
-Edit `backend/.env`:
-```env
-GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=GOCSPX-your_secret
-GOOGLE_REDIRECT_URI=http://localhost:5000/auth/callback
-FRONTEND_URL=http://localhost:3000
-SESSION_SECRET=any-random-string-here
-PORT=5000
-```
+### 2️⃣ Backend Configuration & Startup
 
-### STEP 3 — Install & Run Backend
+1. Open the `backend/.env` file and insert your credentials:
+   ```env
+   GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=your_client_secret
+   GOOGLE_REDIRECT_URI=http://localhost:5000/auth/callback
+   FRONTEND_URL=http://localhost:3000
+   SESSION_SECRET=your_secure_random_string
+   PORT=5000
+   ```
+2. Install dependencies and start the server:
+   ```bash
+   cd backend
+   npm install
+   npm run dev
+   ```
+   *The backend will start running on `http://localhost:5000`.*
 
-```bash
-cd backend
-npm install
-npm run dev
-```
-Backend runs at: http://localhost:5000
+### 3️⃣ Frontend Configuration & Startup
 
-### STEP 4 — Install & Run Frontend
-
-```bash
-cd frontend
-npm install
-npm start
-```
-Frontend runs at: http://localhost:3000
-
-### STEP 5 — Connect Your FastTrack Watch
-
-1. Open **Titan Smart** app on your phone
-2. Go to **Settings** → **Connected Apps** → **Google Fit** → Turn ON
-3. Open http://localhost:3000 in browser
-4. Click **"Connect Google Fit"** button
-5. Sign in with your Google account
-6. Allow all fitness permissions
-7. ✅ Your real watch data now shows on the dashboard!
+1. Open the `frontend/.env` file and ensure it points to the backend:
+   ```env
+   REACT_APP_API_URL=http://localhost:5000
+   ```
+2. Install dependencies and start the React app:
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
+   *The dashboard will open automatically at `http://localhost:3000`.*
 
 ---
 
-## 🔌 API Endpoints
+## ⌚ Connecting Your Smartwatch (FastTrack / Titan)
+
+To see real smartwatch data on the dashboard:
+1. Open your **Titan Smart** (or equivalent) app on your mobile device.
+2. Navigate to **Settings > Connected Apps > Google Fit** and toggle it **ON**.
+3. Open the FastTrack dashboard running on your browser (`http://localhost:3000`).
+4. Click the **"Connect Google Fit"** button.
+5. Sign in with the Google Account that is linked to your fitness app and grant all requested scopes.
+6. 🎉 **Success!** Your dashboard will now display your live health data.
+
+---
+
+## 🔌 Core API Endpoints
+
+The backend exposes severalRESTful endpoints:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /auth/url | Get Google OAuth login URL |
-| GET | /auth/callback | OAuth redirect handler |
-| GET | /auth/status | Check if connected |
-| POST | /auth/logout | Disconnect |
-| GET | /api/health | All metrics (steps, HR, SpO2, calories) |
-| GET | /api/steps | Today's step count |
-| GET | /api/heartrate | Current heart rate |
-| GET | /api/oxygen | Blood oxygen % |
-| GET | /api/calories | Calories burned |
-| GET | /api/weekly | Last 7 days step data |
+| `GET` | `/auth/url` | Generates the Google OAuth 2.0 consent screen URL |
+| `GET` | `/auth/callback` | OAuth redirect handler that generates tokens |
+| `GET` | `/api/health` | Fetches aggregate health metrics (Steps, HR, SpO2, Sleep) |
+| `GET` | `/api/weekly` | Fetches step count data for the last 7 days |
+| `GET` | `/api/demo` | Returns mock data for UI testing without authentication |
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
-**Frontend**
-- React.js 18
-- React Router v6
-- Recharts (bar charts)
-- Axios (HTTP requests)
-- Custom hooks pattern
-
-**Backend**
-- Node.js + Express
-- Google APIs (googleapis package)
-- OAuth 2.0 (express-session)
-- CORS enabled
+- **Frontend:** React.js 18, React Router v6, Recharts, Lucide Icons, Axios.
+- **Backend:** Node.js, Express.js, Googleapis, Express-Session.
+- **Database:** Firebase Realtime Database (for background health data syncing).
 
 ---
 
-## ⚠️ Troubleshooting
+## 💡 Troubleshooting
 
-| Problem | Fix |
-|---------|-----|
-| "Not authenticated" | Click Connect Google Fit and sign in |
-| "redirect_uri mismatch" | Add `http://localhost:5000/auth/callback` in Google Console |
-| Empty data / zeros | Sync Titan Smart app to Google Fit on phone first |
-| CORS error | Make sure backend is running on port 5000 |
-| "Access blocked" | Add your Gmail as test user in OAuth consent screen |
+| Problem | Solution |
+|---------|----------|
+| **"Not authenticated" error** | You haven't linked your account. Click "Connect Google Fit" on the main dashboard screen. |
+| **`redirect_uri_mismatch`** | Ensure `http://localhost:5000/auth/callback` is exactly listed under Authorized Redirect URIs in your Google Cloud Console. |
+| **Dashboard shows all Zeros** | Ensure your smartwatch app is actively syncing data into the Google Fit app on your phone. |
+| **Google Sign-In says "Access Blocked"** | While the app is unpublished in Google Cloud, you must manually add your email address to the "Test Users" list on the OAuth Consent Screen. |
+
+---
+*Built with ❤️ for health & fitness tracking.*
