@@ -1,14 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Activity, 
-  Brain, 
-  ShieldCheck, 
-  Stethoscope, 
-  GitBranch, 
+import {
+  Activity,
+  Brain,
+  ShieldCheck,
+  Stethoscope,
+  GitBranch,
   ArrowRight
 } from 'lucide-react';
-import './MainDashboard.css';
+import './LandingPage.css';
 
 const MainDashboard = () => {
   const modules = [
@@ -52,14 +52,14 @@ const MainDashboard = () => {
       <div className="swasth-bg-blob blob-3"></div>
 
       <div className="swasth-container">
-        
+
         {/* Header Section */}
         <header className="swasth-header">
           <h1 className="swasth-title">SwasthAi</h1>
           <p className="swasth-subtitle">
             An intelligent, AI-powered remote healthcare platform enabling early diagnosis, predictive risk monitoring, and automated workflow optimization for underserved populations.
           </p>
-          
+
           <div className="objective-tags">
             <span className="objective-tag">⚕️ Collect Patient Data</span>
             <span className="objective-tag">🧠 Predict Health Risk</span>
