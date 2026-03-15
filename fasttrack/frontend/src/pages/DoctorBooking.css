@@ -3,6 +3,8 @@
   max-width: 1100px;
   margin: 0 auto;
   font-family: 'Outfit', sans-serif;
+  position: relative;
+  z-index: 1;
 }
 
 .booking-header {
@@ -12,7 +14,10 @@
 
 .booking-header h1 {
   font-size: 2.5rem;
-  color: #1e293b;
+  background: linear-gradient(135deg, #0d9488, #0ea5e9);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin-bottom: 0.5rem;
 }
 
@@ -47,33 +52,36 @@
 }
 
 .doctor-card {
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(13, 148, 136, 0.2);
   padding: 1.5rem;
-  border-radius: 12px;
+  border-radius: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 24px rgba(13, 148, 136, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  backdrop-filter: blur(10px);
 }
 
 .doctor-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+  box-shadow: 0 12px 32px rgba(13, 148, 136, 0.15);
+  border-color: rgba(13, 148, 136, 0.35);
 }
 
 .doc-icon {
   width: 64px;
   height: 64px;
-  background: #f1f5f9;
+  background: linear-gradient(145deg, #f0fdfa, #ecfdf5);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #3b82f6;
+  color: #0d9488;
   margin-bottom: 1rem;
+  border: 1px solid rgba(13, 148, 136, 0.25);
 }
 
 .doc-info h3 {
@@ -89,19 +97,21 @@
 }
 
 .book-btn {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #0d9488, #0ea5e9);
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
   border-radius: 50px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
   width: 100%;
+  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
 }
 
 .book-btn:hover {
-  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
 }
 
 /* Appointments List */
@@ -248,7 +258,7 @@ padding: 0.25rem 0.6rem;
 .action-btn:hover { opacity: 0.8; }
 .action-btn.accept { background: #10b981; color: white; }
 .action-btn.decline { background: #f1f5f9; color: #ef4444; border: 1px solid #e2e8f0; }
-.action-btn.view-profile { background: #3b82f6; color: white; }
+.action-btn.view-profile { background: linear-gradient(135deg, #0d9488, #0ea5e9); color: white; }
 
 .no-data {
   color: #64748b;
@@ -362,7 +372,7 @@ padding: 0.25rem 0.6rem;
 }
 
 .modal-specialty {
-  color: #3b82f6;
+  color: #0d9488;
   font-weight: 600;
   margin: 0.25rem 0 0 0;
 }
@@ -426,7 +436,7 @@ padding: 0.25rem 0.6rem;
 
 .btn-confirm-booking {
   width: 100%;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, #0d9488, #0ea5e9);
   color: white;
   border: none;
   padding: 1.1rem;
@@ -435,12 +445,12 @@ padding: 0.25rem 0.6rem;
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.35);
 }
 
 .btn-confirm-booking:hover {
   transform: translateY(-2px);
-  box-shadow: 0 15px 25px -5px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 15px 25px -5px rgba(13, 148, 136, 0.45);
 }
 
 /* Patient profile modal (doctor view) – attractive card */
@@ -482,7 +492,7 @@ padding: 0.25rem 0.6rem;
 
 /* Hero section */
 .patient-modal-hero {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+  background: linear-gradient(135deg, #0d9488 0%, #0ea5e9 50%, #14b8a6 100%);
   padding: 2rem 2rem 1.75rem;
   border-radius: 20px 20px 0 0;
   display: flex;
@@ -640,13 +650,13 @@ padding: 0.25rem 0.6rem;
   padding: 1rem;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-radius: 10px;
-  border-left: 4px solid #8b5cf6;
+  border-left: 4px solid #0d9488;
 }
 
 .symptom-doc-date {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #8b5cf6;
+  color: #0d9488;
   display: block;
   margin-bottom: 0.4rem;
   text-transform: uppercase;

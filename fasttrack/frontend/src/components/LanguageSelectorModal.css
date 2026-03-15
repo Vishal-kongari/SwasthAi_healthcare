@@ -1,8 +1,8 @@
 .lang-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
+  background: rgba(13, 148, 136, 0.15);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,13 +21,15 @@
 }
 
 .lang-modal {
-  background: white;
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 24px;
   padding: 2rem;
   max-width: 420px;
   width: 100%;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(13, 148, 136, 0.2);
+  border: 1px solid rgba(13, 148, 136, 0.2);
   animation: langSlideUp 0.3s ease;
+  backdrop-filter: blur(12px);
 }
 
 @keyframes langSlideUp {
@@ -45,14 +47,15 @@
   margin: 0 0 0.5rem 0;
   font-size: 1.5rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #0d9488;
   text-align: center;
+  letter-spacing: -0.02em;
 }
 
 .lang-modal-subtitle {
   margin: 0 0 1.5rem 0;
   font-size: 0.95rem;
-  color: #64748b;
+  color: #475569;
   text-align: center;
 }
 
@@ -69,24 +72,25 @@
   align-items: center;
   justify-content: center;
   padding: 1rem 0.75rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 14px;
-  background: #f8fafc;
+  border: 2px solid rgba(13, 148, 136, 0.25);
+  border-radius: 16px;
+  background: #f0fdfa;
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s, transform 0.15s;
   font-family: inherit;
 }
 
 .lang-option-btn:hover {
-  border-color: #8b5cf6;
-  background: #f5f3ff;
+  border-color: #0d9488;
+  background: #ccfbf1;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
 }
 
 .lang-option-native {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #334155;
+  color: #0f766e;
   margin-bottom: 4px;
 }
 
@@ -99,7 +103,7 @@
 .lang-modal-note {
   margin: 0;
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: #64748b;
   text-align: center;
   line-height: 1.4;
 }

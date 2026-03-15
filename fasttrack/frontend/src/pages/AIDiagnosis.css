@@ -1,10 +1,11 @@
 .ai-diagnosis-container {
   min-height: 100vh;
   padding: 40px 20px;
-  background-color: #f8fafc;
+  background: transparent;
   position: relative;
   overflow: hidden;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  z-index: 1;
 }
 
 .ai-header {
@@ -26,13 +27,13 @@
 }
 
 .back-link:hover {
-  color: #3b82f6;
+  color: #0d9488;
 }
 
 .ai-title {
   font-size: 2.5rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #0d9488;
   margin: 0 0 10px 0;
   display: flex;
   align-items: center;
@@ -90,8 +91,8 @@
 
 .tab-btn.active {
   background: white;
-  color: #3b82f6;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: #0d9488;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.15);
 }
 
 /* Manual form */
@@ -129,7 +130,7 @@
 .manual-row input:focus,
 .manual-row select:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #0d9488;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
@@ -180,7 +181,7 @@
 }
 
 .upload-dropzone:hover {
-  border-color: #3b82f6;
+  border-color: #0d9488;
   background: #eff6ff;
 }
 
@@ -228,7 +229,7 @@
   width: 100%;
   margin-top: 25px;
   padding: 16px;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, #0d9488, #0ea5e9);
   color: white;
   border: none;
   border-radius: 12px;
@@ -333,7 +334,7 @@
   left: 0;
   height: 100%;
   width: 30%;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(90deg, #0d9488, #0ea5e9);
   border-radius: 10px;
   animation: scan 1.5s ease-in-out infinite alternate;
 }
@@ -493,7 +494,7 @@
 }
 
 .no-recommended a {
-  color: #3b82f6;
+  color: #0d9488;
   font-weight: 600;
 }
 
@@ -547,7 +548,7 @@
 .rec-doc-specialty {
   display: block;
   font-size: 0.85rem;
-  color: #3b82f6;
+  color: #0d9488;
   font-weight: 600;
   margin-bottom: 4px;
 }
@@ -561,7 +562,7 @@
   display: inline-block;
   text-align: center;
   padding: 8px 14px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, #0d9488, #0d9488);
   color: white;
   border-radius: 8px;
   font-size: 0.9rem;
@@ -682,7 +683,7 @@
 }
 
 .modal-specialty {
-  color: #3b82f6;
+  color: #0d9488;
   font-weight: 600;
   margin: 0.25rem 0 0 0;
 }
@@ -725,7 +726,7 @@
 }
 
 .hospital-name {
-  color: #3b82f6 !important;
+  color: #0d9488 !important;
   font-weight: 700;
 }
 
@@ -755,7 +756,7 @@
 
 .btn-confirm-booking {
   width: 100%;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, #0d9488, #0ea5e9);
   color: white;
   border: none;
   padding: 1.1rem;

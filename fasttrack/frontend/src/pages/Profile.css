@@ -1,35 +1,41 @@
 .profile-page {
   min-height: calc(100vh - 64px);
-  background-color: #f3f4f6;
+  background: transparent;
   padding: 3rem 1rem;
   display: flex;
   justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
 .profile-container {
-  background: white;
+  background: rgba(255, 255, 255, 0.92);
   padding: 2.5rem;
-  border-radius: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(13, 148, 136, 0.1);
   max-width: 600px;
   width: 100%;
+  border: 1px solid rgba(13, 148, 136, 0.2);
+  backdrop-filter: blur(12px);
 }
 
 .profile-container h2 {
   font-size: 1.75rem;
-  color: #1f2937;
+  color: #0d9488;
   margin-bottom: 2rem;
   text-align: center;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .save-message {
-  background: #d1fae5;
+  background: linear-gradient(135deg, #d1fae5, #ccfbf1);
   color: #065f46;
   padding: 1rem;
-  border-radius: 0.5rem;
+  border-radius: 12px;
   text-align: center;
   margin-bottom: 1.5rem;
+  border: 1px solid #a7f3d0;
 }
 
 .dp-section {
@@ -44,12 +50,13 @@
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: #f3f4f6;
+  background: linear-gradient(145deg, #f0fdfa, #ecfdf5);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 3px solid #ec4899;
+  border: 3px solid #0d9488;
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.2);
 }
 
 .dp-preview img {
@@ -66,18 +73,20 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #f9fafb;
-  border: 1px solid #d1d5db;
+  background: #f0fdfa;
+  border: 1px solid rgba(13, 148, 136, 0.3);
   padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 0.9rem;
-  color: #4b5563;
-  transition: background 0.2s;
+  color: #0f766e;
+  font-weight: 600;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .dp-label:hover {
-  background: #e5e7eb;
+  background: #ccfbf1;
+  border-color: #0d9488;
 }
 
 .form-group {
@@ -98,19 +107,20 @@
 .form-group select, 
 .form-group textarea {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(13, 148, 136, 0.3);
+  border-radius: 12px;
   font-size: 1rem;
-  background: #f9fafb;
+  background: #f8fffe;
 }
 
 .form-group input:focus, 
 .form-group select:focus, 
 .form-group textarea:focus {
   outline: none;
-  border-color: #ec4899;
+  border-color: #0d9488;
   background: white;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
 }
 
 .form-group small {
@@ -122,20 +132,22 @@
 
 .profile-save-btn {
   width: 100%;
-  background: linear-gradient(135deg, #ec4899, #db2777);
+  background: linear-gradient(135deg, #0d9488, #0ea5e9);
   color: white;
   border: none;
   padding: 1rem;
-  border-radius: 0.75rem;
+  border-radius: 14px;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
   margin-top: 1rem;
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.35);
 }
 
 .profile-save-btn:hover {
-  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.4);
 }
 
 .profile-save-btn:disabled {
@@ -169,10 +181,10 @@
 }
 
 .symptom-history-item {
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
+  border: 1px solid rgba(13, 148, 136, 0.2);
+  border-radius: 12px;
   overflow: hidden;
-  background: #fafafa;
+  background: #f0fdfa;
 }
 
 .symptom-history-header {
@@ -196,7 +208,7 @@
 .symptom-history-date {
   flex-shrink: 0;
   font-weight: 600;
-  color: #8b5cf6;
+  color: #0d9488;
   min-width: 5rem;
 }
 

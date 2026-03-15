@@ -1,7 +1,9 @@
 .hospital-dashboard-container {
   display: flex;
   min-height: calc(100vh - 64px); 
-  background-color: #f3f4f6;
+  background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .hospital-dashboard-error {
@@ -16,15 +18,16 @@
 
 .hospital-sidebar {
   width: 250px;
-  background-color: white;
+  background: rgba(255, 255, 255, 0.92);
   padding: 2rem 1rem;
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid rgba(13, 148, 136, 0.2);
+  backdrop-filter: blur(10px);
 }
 
 .hospital-sidebar h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #0d9488;
   margin-bottom: 2rem;
   padding-left: 1rem;
 }
@@ -46,13 +49,14 @@
 }
 
 .hospital-sidebar li:hover {
-  background-color: #f3f4f6;
-  color: #1f2937;
+  background: #f0fdfa;
+  color: #0d9488;
 }
 
 .hospital-sidebar li.active {
-  background-color: #ec4899;
+  background: linear-gradient(135deg, #0d9488, #0ea5e9);
   color: white;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
 }
 
 .hospital-content {
@@ -62,10 +66,12 @@
 }
 
 .tab-section {
-  background-color: white;
+  background: rgba(255, 255, 255, 0.92);
   padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(13, 148, 136, 0.08);
+  border: 1px solid rgba(13, 148, 136, 0.2);
+  backdrop-filter: blur(10px);
 }
 
 .tab-section h3 {
@@ -96,7 +102,7 @@
 }
 
 .save-btn {
-  background-color: #ec4899;
+  background: linear-gradient(135deg, #0d9488, #0ea5e9);
   color: white;
   border: none;
   padding: 0.75rem;
@@ -160,7 +166,7 @@
 }
 
 .hospital-doctor-card:hover {
-  border-color: #ec4899;
+  border-color: #0d9488;
   background: white;
   box-shadow: 0 4px 12px rgba(236, 72, 153, 0.12);
 }
@@ -208,7 +214,7 @@
 
 .hospital-doctor-view {
   font-size: 0.85rem;
-  color: #ec4899;
+  color: #0d9488;
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -297,7 +303,7 @@
 }
 
 .hospital-modal-specialty {
-  color: #3b82f6;
+  color: #0d9488;
   font-weight: 600;
   margin: 0.25rem 0 0 0;
   font-size: 1rem;
@@ -341,7 +347,7 @@
 }
 
 .hospital-affiliated-name {
-  color: #3b82f6 !important;
+  color: #0d9488 !important;
   font-weight: 700;
 }
 

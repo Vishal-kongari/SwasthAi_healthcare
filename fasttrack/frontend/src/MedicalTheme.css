@@ -1,0 +1,56 @@
+/* ═══════════════════════════════════════════════════════════════
+   SwasthAI — Global Medical Theme & Floating Background Icons
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  /* Medical palette */
+  --medical-teal: #0d9488;
+  --medical-teal-light: #14b8a6;
+  --medical-mint: #5eead4;
+  --medical-mint-soft: #99f6e4;
+  --medical-sky: #0ea5e9;
+  --medical-sky-soft: #7dd3fc;
+  --medical-emerald: #10b981;
+  --medical-white: #f0fdfa;
+  --medical-bg: #ecfdf5;
+  --medical-bg-alt: #f0f9ff;
+  --medical-card: rgba(255, 255, 255, 0.85);
+  --medical-border: rgba(20, 184, 166, 0.2);
+  --medical-text: #0f172a;
+  --medical-text-muted: #475569;
+  --medical-shadow: 0 4px 20px rgba(13, 148, 136, 0.08);
+  --medical-shadow-hover: 0 12px 32px rgba(13, 148, 136, 0.12);
+}
+
+/* Global body — hero image as main background at 70% opacity */
+body {
+  margin: 0;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  background: #f8fafc;
+  color: var(--medical-text);
+  overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url('./assets/hero.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.7;
+}
+
+/* Ensure main content sits above the decorative layer */
+#root {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}

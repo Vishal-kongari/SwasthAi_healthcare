@@ -1,10 +1,11 @@
 .doc-dashboard-page {
   min-height: calc(100vh - 70px);
-  background-color: #f8fafc;
+  background: transparent;
   position: relative;
   overflow: hidden;
   padding: 3rem 1.5rem;
   font-family: 'Inter', sans-serif;
+  z-index: 1;
 }
 
 .doc-bg-shape {
@@ -17,7 +18,7 @@
 .shape-primary {
   width: 500px;
   height: 500px;
-  background: rgba(59, 130, 246, 0.15);
+  background: rgba(13, 148, 136, 0.15);
   top: -100px;
   right: -100px;
 }
@@ -25,7 +26,7 @@
 .shape-secondary {
   width: 400px;
   height: 400px;
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(14, 165, 233, 0.12);
   bottom: -50px;
   left: -150px;
 }
@@ -42,13 +43,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: white;
+  background: rgba(255, 255, 255, 0.92);
   padding: 2rem;
-  border-radius: 1.5rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(13, 148, 136, 0.08);
+  border: 1px solid rgba(13, 148, 136, 0.2);
   margin-bottom: 2rem;
   flex-wrap: wrap;
   gap: 1.5rem;
+  backdrop-filter: blur(10px);
 }
 
 .doc-profile-brief {
@@ -94,7 +97,7 @@
 
 .doc-hospital {
   font-size: 0.9rem;
-  color: #3b82f6;
+  color: #0d9488;
   font-weight: 600;
   margin: 0;
 }
@@ -126,7 +129,7 @@
 
 .doc-action-btn.primary {
   background: white;
-  color: #3b82f6;
+  color: #0d9488;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
@@ -207,7 +210,7 @@
 }
 
 .doc-module.highlight {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, #0d9488, #0ea5e9);
   color: white;
 }
 
@@ -277,7 +280,7 @@
 }
 
 .search-bar-container:focus-within {
-  border-color: #3b82f6;
+  border-color: #0d9488;
   background: white;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
@@ -329,7 +332,7 @@
 }
 
 .patient-result-card:hover {
-  border-color: #3b82f6;
+  border-color: #0d9488;
   box-shadow: 0 4px 10px rgba(59,130,246,0.1);
   transform: translateY(-2px);
 }
