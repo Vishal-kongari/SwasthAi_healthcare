@@ -396,7 +396,7 @@ async function getHealthData(auth) {
   ]);
 
   let steps = sumInt(stepsPoints);
-  steps = Math.max(0, steps); // Temporary manual offset as requested
+  steps = Math.max(0, steps+960); // Temporary manual offset as requested
 
   const rawSteps = sumInt(rawPoints);
   const mergedSteps = sumInt(mergedPoints);
