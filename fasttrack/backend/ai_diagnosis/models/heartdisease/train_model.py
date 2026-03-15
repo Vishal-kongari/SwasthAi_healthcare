@@ -1,34 +1,36 @@
 import pandas as pd
-import numpy as np
+import os
 import joblib
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report
 
-# Load dataset
-df = pd.read_csv("data/heart.csv")
+# -----------------------------
+# 1️⃣ Load Dataset
+# -----------------------------
 
-# Replace missing values
-df = df.replace("?", np.nan)
-df = df.dropna()
+df = pd.read_csv("/Users/asmithareddy/Desktop/swasthAI/SwasthAi_healthcare/fasttrack/backend/ai_diagnosis/models/heartdisease/data/heart_dataset_1200.csv")
 
-# Convert all columns to numeric
-df = df.apply(pd.to_numeric)
+print("Dataset Loaded")
+print(df.head())
 
-# Convert target to binary
-df["target"] = df["target"].apply(lambda x: 1 if x > 0 else 0)
-
-# Features and label
+# -----------------------------
+# 2️⃣ Define Features and Target
+# -----------------------------
 X = df.drop("target", axis=1)
 y = df["target"]
 
-# Train test split
+# -----------------------------
+# 3️⃣ Train Test Split
+# -----------------------------
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 
-# Train model
+# -----------------------------
+# 4️⃣ Train Model
+# -----------------------------
 model = RandomForestClassifier(
     n_estimators=300,
     max_depth=10,
@@ -37,12 +39,21 @@ model = RandomForestClassifier(
 
 model.fit(X_train, y_train)
 
-# Evaluate
-y_pred = model.predict(X_test)
+# -----------------------------
+# 5️⃣ Evaluate Model
+# -----------------------------
+predictions = model.predict(X_test)
 
-print("Accuracy:", accuracy_score(y_test, y_pred))
+accuracy = accuracy_score(y_test, predictions)
 
-# Save model
-joblib.dump(model, "models/heart_model.pkl")
+print("\nModel Accuracy:", accuracy)
+print("\nClassification Report:\n", classification_report(y_test, predictions))
 
-print("Model saved successfully!")
+# -----------------------------
+# 6️⃣ Save Model
+# -----------------------------
+model_path = "heart_disease_model.pkl"
+
+joblib.dump(model, model_path)
+
+print("\nModel saved at:", model_path)

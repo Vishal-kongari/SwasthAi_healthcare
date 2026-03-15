@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import './Auth.css';
 
 export default function HospitalSignup() {
@@ -11,23 +12,19 @@ export default function HospitalSignup() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
-
-    if (password !== passwordConfirm) {
-      return setError('Passwords do not match');
-    }
-
+    if (password !== passwordConfirm) return setError(t('passwordsNoMatch'));
     try {
       setError('');
       setLoading(true);
-      // Pass 'hospital' as the role
       await signup(email, password, 'hospital', name);
       navigate('/hospital/dashboard');
     } catch (err) {
-      setError('Failed to create an account.');
+      setError(t('signUpError'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -37,31 +34,31 @@ export default function HospitalSignup() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>Hospital Portal Sign Up</h2>
+        <h2>{t('hospitalSignUpTitle')}</h2>
         {error && <div className="auth-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Hospital Name</label>
+            <label>{t('hospitalName')}</label>
             <input type="text" required value={name} onChange={e => setName(e.target.value)} />
           </div>
           <div className="form-group">
-            <label>Email</label>
+            <label>{t('email')}</label>
             <input type="email" required value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div className="form-group">
-            <label>Password</label>
+            <label>{t('password')}</label>
             <input type="password" required value={password} onChange={e => setPassword(e.target.value)} />
           </div>
           <div className="form-group">
-            <label>Confirm Password</label>
+            <label>{t('confirmPassword')}</label>
             <input type="password" required value={passwordConfirm} onChange={e => setPasswordConfirm(e.target.value)} />
           </div>
           <button disabled={loading} className="auth-btn" type="submit">
-            Register Hospital
+            {t('registerHospital')}
           </button>
         </form>
         <div className="auth-links">
-          Already registered? <Link to="/hospital/login">Log In</Link>
+          {t('alreadyRegistered')} <Link to="/hospital/login">{t('logIn')}</Link>
         </div>
       </div>
     </div>

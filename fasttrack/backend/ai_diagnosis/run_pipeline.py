@@ -4,84 +4,112 @@ import os
 import joblib
 import numpy as np
 
-# Load local models safely
-def load_model(path):
+# Canonical 9 features in fixed order (same as OCR extraction and all datasets):
+# Age, Sex, BMI, BloodPressure, Cholesterol, Glucose, HeartRate, Smoking, LiverEnzymeLevel
+FEATURE_ORDER = [
+    'age', 'sex', 'bmi', 'bloodPressure', 'cholesterol', 'glucose',
+    'heartRate', 'smoking', 'liverEnzymeLevel'
+]
+DEFAULTS = {
+    'age': 40,
+    'sex': 0,
+    'bmi': 25.0,
+    'bloodPressure': 120,
+    'cholesterol': 200,
+    'glucose': 100,
+    'heartRate': 72,
+    'smoking': 0,
+    'liverEnzymeLevel': 40,
+}
+
+# Load local models safely (use relative paths so it works across machines)
+def load_model(rel_path):
     try:
-        abs_path = os.path.join(os.path.dirname(__file__), path)
+        base = os.path.dirname(os.path.abspath(__file__))
+        abs_path = os.path.join(base, rel_path)
         return joblib.load(abs_path)
     except Exception as e:
+        print(f"Warning: Could not load model {rel_path}: {e}", file=sys.stderr)
         return None
 
-diabetes_model = load_model("models/diabetes/models/diabetes_model.pkl")
-heart_model = load_model("models/heartdisease/models/heart_model.pkl")
-kidney_model = load_model("models/kidneydisease/models/kidney_model.pkl")
+diabetes_model = load_model("models/diabetes/models/diabetes_disease_model.pkl")
+heart_model = load_model("models/heartdisease/models/heart_disease_model.pkl")
+kidney_model = load_model("models/kidneydisease/models/ckd_model.pkl")
 lung_model = load_model("models/lungdisease/models/lung_model.pkl")
 
-def parse_input_to_array(features_dict, expected_length, default_val=0):
+
+def parse_input_to_canonical_9(features_dict):
     """
-    Since OCR is messy, we just use a heuristic to pad/fill the required features array
-    based on the keys we *could* extract. In a real scenario, you map specific keys to specific indices.
+    Build a single 9-feature array in fixed order from OCR/extracted dict.
+    Keys may be camelCase or lowercase; 'bp' maps to bloodPressure.
     """
-    arr = [default_val] * expected_length
-    
-    # Simple mapping heuristic
-    # Diabetes (8 features): Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin, BMI, DiabetesPedigreeFunction, Age
-    if expected_length == 8:
-        arr[1] = features_dict.get('glucose', 100)
-        arr[2] = features_dict.get('bp', 80)
-        arr[5] = features_dict.get('bmi', 25)
-        arr[7] = features_dict.get('age', 40)
-    
-    return np.array(arr).reshape(1, -1)
+    # Normalize keys: allow bp -> bloodPressure, etc.
+    d = {k.lower(): v for k, v in (features_dict or {}).items()}
+    if 'bp' in d and 'bloodpressure' not in d:
+        d['bloodpressure'] = d['bp']
+    if 'liverenzymelevel' not in d and 'liverenzyme' in d:
+        d['liverenzymelevel'] = d['liverenzyme']
+
+    arr = []
+    for key in FEATURE_ORDER:
+        val = d.get(key, DEFAULTS.get(key, 0))
+        try:
+            arr.append(float(val))
+        except (TypeError, ValueError):
+            arr.append(DEFAULTS.get(key, 0))
+    return np.array(arr, dtype=np.float64).reshape(1, -1)
+
+
+def get_expected_features(model):
+    """Return the number of features the model expects (sklearn)."""
+    if model is None:
+        return 9
+    return getattr(model, 'n_features_in_', 9)
+
+
+def prepare_for_model(canonical_9_arr, expected_len):
+    """
+    Return an array of shape (1, expected_len).
+    - If expected_len == 9: return canonical_9_arr as is.
+    - If expected_len > 9: pad with zeros (append 0s).
+    - If expected_len < 9: take first expected_len columns.
+    """
+    n = canonical_9_arr.shape[1]
+    if expected_len == n:
+        return canonical_9_arr
+    if expected_len > n:
+        pad = np.zeros((1, expected_len - n), dtype=np.float64)
+        return np.hstack([canonical_9_arr, pad])
+    return canonical_9_arr[:, :expected_len]
+
 
 def run_predictions(parsed_data):
     results = {}
-    
-    # Diabetes
-    if diabetes_model:
+    canonical_9 = parse_input_to_canonical_9(parsed_data)
+
+    def run_one(name, model):
+        if model is None:
+            return
         try:
-            arr = parse_input_to_array(parsed_data, 8)
-            pred = diabetes_model.predict(arr)[0]
-            prob = diabetes_model.predict_proba(arr)[0][1]
+            n = get_expected_features(model)
+            X = prepare_for_model(canonical_9, n)
+            pred = model.predict(X)[0]
+            proba = model.predict_proba(X)[0]
+            # Handle binary: class 1 probability
+            prob = proba[1] if len(proba) > 1 else proba[0]
             risk = "HIGH" if prob >= 0.7 else "MEDIUM" if prob >= 0.4 else "LOW"
-            results["diabetes"] = { "prediction": int(pred), "probability": float(prob), "risk": risk }
+            results[name] = {"prediction": int(pred), "probability": float(prob), "risk": risk}
         except Exception as e:
-            results["diabetes"] = { "error": str(e) }
-            
-    # Heart (13 features)
-    if heart_model:
-        try:
-            arr = parse_input_to_array(parsed_data, 13)
-            pred = heart_model.predict(arr)[0]
-            prob = heart_model.predict_proba(arr)[0][1]
-            risk = "HIGH" if prob >= 0.7 else "MEDIUM" if prob >= 0.4 else "LOW"
-            results["heart"] = { "prediction": int(pred), "probability": float(prob), "risk": risk }
-        except Exception as e:
-            results["heart"] = { "error": str(e) }
-            
-    # Kidney (24 features)
-    if kidney_model:
-        try:
-            arr = parse_input_to_array(parsed_data, 24)
-            pred = kidney_model.predict(arr)[0]
-            prob = kidney_model.predict_proba(arr)[0][1]
-            risk = "HIGH" if prob >= 0.7 else "MEDIUM" if prob >= 0.4 else "LOW"
-            results["kidney"] = { "prediction": int(pred), "probability": float(prob), "risk": risk }
-        except Exception as e:
-            results["kidney"] = { "error": str(e) }
-            
-    # Lung (15 features)
-    if lung_model:
-        try:
-            arr = parse_input_to_array(parsed_data, 15)
-            pred = lung_model.predict(arr)[0]
-            prob = lung_model.predict_proba(arr)[0][1]
-            risk = "HIGH" if prob >= 0.7 else "MEDIUM" if prob >= 0.4 else "LOW"
-            results["lung"] = { "prediction": int(pred), "probability": float(prob), "risk": risk }
-        except Exception as e:
-            results["lung"] = { "error": str(e) }
-            
+            results[name] = {"error": str(e)}
+
+    # Same order as data: diabetes, heart, kidney, lung
+    run_one("diabetes", diabetes_model)
+    run_one("heart", heart_model)
+    run_one("kidney", kidney_model)
+    run_one("lung", lung_model)
+
     return results
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

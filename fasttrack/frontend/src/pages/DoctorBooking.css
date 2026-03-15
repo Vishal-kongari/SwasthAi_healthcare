@@ -109,17 +109,33 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  width: 100%;
+}
+
+.doctor-view .appointments-list {
+  max-width: 100%;
 }
 
 .appt-card {
   background: white;
   border: 1px solid #e2e8f0;
-  padding: 1.25rem;
-  border-radius: 10px;
+  padding: 1.25rem 1.75rem;
+  border-radius: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+  width: 100%;
+}
+
+.appt-info-main {
+  flex: 1;
+}
+
+.appt-status-side {
+  margin-left: 20px;
+  display: flex;
+  align-items: center;
 }
 
 .status-pending { border-left: 4px solid #f59e0b; }
@@ -134,14 +150,27 @@
   text-transform: capitalize;
 }
 
-.status-badge.pending { background: #fef3c7; color: #b45309; }
-.status-badge.accepted { background: #d1fae5; color: #047857; }
-.status-badge.declined { background: #fee2e2; color: #b91c1c; }
+.status-badge.pending { background: #fef3c7; color: #b45309; 
+padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;}
+.status-badge.accepted { background: #d1fae5; color: #047857; padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;}
+.status-badge.declined { background: #fee2e2; color: #b91c1c; padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;}
 
 /* Doctor View specific */
 .doctor-appt-card {
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 1rem;
 }
 
@@ -149,6 +178,7 @@
   .doctor-appt-card {
     flex-direction: row;
     align-items: center;
+    flex-wrap: nowrap;
   }
 }
 
@@ -156,9 +186,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
 }
 
-.appt-person, .appt-time, .appt-status {
+.appt-person {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -166,15 +198,38 @@
   font-size: 0.95rem;
 }
 
+.appt-time {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.appt-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #475569;
+  font-size: 0.95rem;
+  flex-wrap: nowrap;
+}
+
+.appt-status .status-badge {
+  flex-shrink: 0;
+}
+
 .appt-actions {
   display: flex;
   gap: 0.75rem;
   margin-top: 1rem;
+  flex-shrink: 0;
 }
 
 @media (min-width: 640px) {
   .appt-actions {
     margin-top: 0;
+    margin-left: 1rem;
   }
 }
 
@@ -193,6 +248,7 @@
 .action-btn:hover { opacity: 0.8; }
 .action-btn.accept { background: #10b981; color: white; }
 .action-btn.decline { background: #f1f5f9; color: #ef4444; border: 1px solid #e2e8f0; }
+.action-btn.view-profile { background: #3b82f6; color: white; }
 
 .no-data {
   color: #64748b;
@@ -201,6 +257,21 @@
   background: #f8fafc;
   border-radius: 8px;
   font-style: italic;
+}
+
+.appt-info-main h3 {
+  margin: 0 0 4px 0;
+  font-size: 1.1rem;
+  color: #1e293b;
+}
+
+.appt-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
 }
 
 /* Modal Styles */
@@ -372,6 +443,304 @@
   box-shadow: 0 15px 25px -5px rgba(59, 130, 246, 0.4);
 }
 
+/* Patient profile modal (doctor view) – attractive card */
+.patient-modal-overlay {
+  backdrop-filter: blur(6px);
+}
+
+.patient-profile-modal {
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+  border: none;
+}
+
+.patient-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: background 0.2s, color 0.2s;
+}
+
+.patient-modal-close:hover {
+  background: white;
+  color: #0f172a;
+}
+
+/* Hero section */
+.patient-modal-hero {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+  padding: 2rem 2rem 1.75rem;
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  position: relative;
+}
+
+.patient-modal-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.patient-modal-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.patient-modal-hero-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.patient-modal-name {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.patient-modal-email {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+  word-break: break-all;
+}
+
+.patient-modal-date {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.patient-status-pill {
+  display: inline-block;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.5rem;
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+.patient-status-pill.status-pending {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.patient-status-pill.status-accepted {
+  background: rgba(34, 197, 94, 0.95);
+  color: white;
+}
+
+.patient-status-pill.status-declined {
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+}
+
+/* Body */
+.patient-modal-body {
+  padding: 1.5rem 2rem 1.25rem;
+  background: #fafafa;
+}
+
+.patient-modal-body .info-grid {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.patient-modal-body .info-item label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.patient-modal-body .info-item p {
+  font-size: 0.95rem;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.patient-modal-body .info-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
+}
+
+.patient-modal-body .loading-profile {
+  text-align: center;
+  color: #64748b;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+}
+
+.symptom-history-doc {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
+}
+
+.symptom-history-doc label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.symptom-history-doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.symptom-history-doc-item {
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 10px;
+  border-left: 4px solid #8b5cf6;
+}
+
+.symptom-doc-date {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #8b5cf6;
+  display: block;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.symptom-doc-symptoms {
+  font-size: 0.9rem;
+  color: #475569;
+  margin: 0 0 0.4rem 0;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.symptom-doc-analysis {
+  font-size: 0.85rem;
+  color: #334155;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Footer */
+.patient-modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 1.25rem 2rem 1.5rem;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  border-radius: 0 0 20px 20px;
+}
+
+.patient-modal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+  min-width: 130px;
+  justify-content: center;
+}
+
+.patient-modal-btn.decline {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 2px solid #fecaca;
+}
+
+.patient-modal-btn.decline:hover {
+  background: #fee2e2;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+.patient-modal-btn.accept {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 4px 14px -2px rgba(16, 185, 129, 0.45);
+}
+
+.patient-modal-btn.accept:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.5);
+}
+
+.patient-modal-status-msg {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Status badges in list */
+.status-badge.status-pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-badge.status-accepted {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.status-declined {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
 @media (max-width: 600px) {
   .info-grid {
     grid-template-columns: 1fr;
@@ -380,5 +749,22 @@
     flex-direction: column;
     text-align: center;
     padding: 2rem;
+  }
+  .patient-modal-hero {
+    flex-direction: column;
+    text-align: center;
+  }
+  .patient-modal-hero-text {
+    align-items: center;
+  }
+  .patient-status-pill {
+    align-self: center;
+  }
+  .doctor-appt-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .appt-actions {
+    margin-left: 0;
   }
 }

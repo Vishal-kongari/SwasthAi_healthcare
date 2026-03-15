@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
 import { ref, get, push, set, onValue, update } from 'firebase/database';
-import { Calendar, Clock, User, CheckCircle, XCircle, Award, Briefcase, Phone, Mail, X } from 'lucide-react';
+import { Calendar, Clock, User, CheckCircle, XCircle, Award, Briefcase, Phone, Mail, X, Droplets, Activity, Weight, MessageCircle } from 'lucide-react';
 import './DoctorBooking.css';
 
 export default function DoctorBooking() {
@@ -13,6 +13,10 @@ export default function DoctorBooking() {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [hospitalsMap, setHospitalsMap] = useState({});
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [showPatientProfileModal, setShowPatientProfileModal] = useState(false);
+  const [patientProfile, setPatientProfile] = useState(null);
+  const [patientSymptomHistory, setPatientSymptomHistory] = useState([]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -111,6 +115,27 @@ export default function DoctorBooking() {
   async function updateStatus(apptId, status) {
     const apptRef = ref(db, `appointments/${apptId}`);
     await update(apptRef, { status });
+    if (showPatientProfileModal) setShowPatientProfileModal(false);
+    setSelectedAppointment(null);
+  }
+
+  async function openPatientProfile(appt) {
+    setSelectedAppointment(appt);
+    setShowPatientProfileModal(true);
+    setPatientProfile(null);
+    setPatientSymptomHistory([]);
+    try {
+      const profileSnap = await get(ref(db, `users/${appt.patientId}`));
+      if (profileSnap.exists()) setPatientProfile(profileSnap.val());
+      const symptomSnap = await get(ref(db, `users/${appt.patientId}/symptomHistory`));
+      if (symptomSnap.exists()) {
+        const list = Object.entries(symptomSnap.val()).map(([id, v]) => ({ id, ...v }));
+        list.sort((a, b) => new Date(b.date || b.id) - new Date(a.date || a.id));
+        setPatientSymptomHistory(list);
+      }
+    } catch (e) {
+      console.error('Failed to load patient profile', e);
+    }
   }
 
   // Wait for loading or redirect in a `useEffect` instead if desired
@@ -175,11 +200,14 @@ export default function DoctorBooking() {
             <div className="appointments-list">
               {appointments.map(appt => (
                 <div key={appt.id} className={`appt-card status-${appt.status}`}>
-                  <div className="appt-detail">
-                    <strong>Doctor:</strong> Dr. {appt.doctorName}
+                  <div className="appt-info-main">
+                    <h3>Dr. {appt.doctorName}</h3>
+                    <p className="appt-date">
+                      <Calendar size={14} /> {new Date(appt.timestamp).toLocaleDateString()}
+                    </p>
                   </div>
-                  <div className="appt-detail">
-                    <strong>Status:</strong> <span className={`status-badge ${appt.status}`}>{appt.status}</span>
+                  <div className="appt-status-side">
+                    <span className={`status-badge.${appt.status}`}>{appt.status}</span>
                   </div>
                 </div>
               ))}
@@ -211,19 +239,14 @@ export default function DoctorBooking() {
                       Requested: {new Date(appt.timestamp).toLocaleString()}
                     </div>
                     <div className="appt-status">
-                      Status: <span className={`status-badge ${appt.status}`}>{appt.status}</span>
+                      Status: <span className={`appt-status-side ${appt.status}`}>{appt.status}</span>
                     </div>
                   </div>
-                  {appt.status === 'pending' && (
-                    <div className="appt-actions">
-                      <button className="action-btn accept" onClick={() => updateStatus(appt.id, 'accepted')}>
-                        <CheckCircle size={18} /> Accept
-                      </button>
-                      <button className="action-btn decline" onClick={() => updateStatus(appt.id, 'declined')}>
-                        <XCircle size={18} /> Decline
-                      </button>
-                    </div>
-                  )}
+                  <div className="appt-actions">
+                    <button className="action-btn view-profile" onClick={() => openPatientProfile(appt)}>
+                      <User size={18} /> View profile
+                    </button>
+                  </div>
                 </div>
               ))}
               {appointments.length === 0 && !loading && <p className="no-data">No new appointment requests.</p>}
@@ -308,6 +331,115 @@ export default function DoctorBooking() {
               >
                 Confirm Appointment Request
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Patient profile modal (doctor view) – full profile, status, then Accept/Decline */}
+      {showPatientProfileModal && selectedAppointment && (
+        <div className="modal-overlay patient-modal-overlay" onClick={() => { setShowPatientProfileModal(false); setSelectedAppointment(null); }}>
+          <div className="modal-content patient-profile-modal" onClick={e => e.stopPropagation()}>
+            <button type="button" className="modal-close patient-modal-close" onClick={() => { setShowPatientProfileModal(false); setSelectedAppointment(null); }} aria-label="Close"><X size={22} /></button>
+            <div className="patient-modal-hero">
+              <div className="patient-modal-avatar">
+                {selectedAppointment.patientDp ? (
+                  <img src={selectedAppointment.patientDp} alt="Patient" />
+                ) : (
+                  <User size={48} color="#94a3b8" />
+                )}
+              </div>
+              <div className="patient-modal-hero-text">
+                <h2 className="patient-modal-name">{patientProfile?.name || selectedAppointment.patientName || 'Patient'}</h2>
+                <p className="patient-modal-email">{selectedAppointment.patientEmail}</p>
+                <p className="patient-modal-date">Requested {new Date(selectedAppointment.timestamp).toLocaleDateString(undefined, { dateStyle: 'medium' })}</p>
+                <span className={`patient-status-pill status-${selectedAppointment.status}`}>
+                  {selectedAppointment.status === 'pending' && 'Pending'}
+                  {selectedAppointment.status === 'accepted' && 'Accepted'}
+                  {selectedAppointment.status === 'declined' && 'Declined'}
+                </span>
+              </div>
+            </div>
+            <div className="modal-body patient-modal-body">
+              {!patientProfile && !patientSymptomHistory.length ? (
+                <p className="loading-profile">Loading profile…</p>
+              ) : (
+                <>
+                  <div className="info-grid">
+                    <div className="info-item">
+                      <Phone size={20} color="#10b981" />
+                      <div>
+                        <label>Phone</label>
+                        <p>{patientProfile?.phone || selectedAppointment.patientPhone || '—'}</p>
+                      </div>
+                    </div>
+                    <div className="info-item">
+                      <Activity size={20} color="#8b5cf6" />
+                      <div>
+                        <label>Age / Gender</label>
+                        <p>{patientProfile?.age || '—'} / {patientProfile?.gender || '—'}</p>
+                      </div>
+                    </div>
+                    <div className="info-item">
+                      <Droplets size={20} color="#ef4444" />
+                      <div>
+                        <label>Blood group</label>
+                        <p>{patientProfile?.bloodGroup || '—'}</p>
+                      </div>
+                    </div>
+                    <div className="info-item">
+                      <Weight size={20} color="#3b82f6" />
+                      <div>
+                        <label>Weight (kg)</label>
+                        <p>{patientProfile?.weight || '—'}</p>
+                      </div>
+                    </div>
+                  </div>
+                  {patientProfile?.recentDiseases && (
+                    <div className="info-section">
+                      <label>Recent diseases / conditions</label>
+                      <p>{patientProfile.recentDiseases}</p>
+                    </div>
+                  )}
+                  {patientProfile?.medicalHistory && (
+                    <div className="info-section">
+                      <label>Medical history</label>
+                      <p>{patientProfile.medicalHistory}</p>
+                    </div>
+                  )}
+                  {patientSymptomHistory.length > 0 && (
+                    <div className="info-section symptom-history-doc">
+                      <label><MessageCircle size={16} color="#8b5cf6" /> Symptom history (AI)</label>
+                      <div className="symptom-history-doc-list">
+                        {patientSymptomHistory.slice(0, 5).map((entry) => (
+                          <div key={entry.id} className="symptom-history-doc-item">
+                            <span className="symptom-doc-date">{new Date(entry.date || entry.id).toLocaleDateString()}</span>
+                            <p className="symptom-doc-symptoms">{entry.symptoms}</p>
+                            <p className="symptom-doc-analysis">{entry.analysis}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="modal-footer patient-modal-footer">
+              {selectedAppointment.status === 'pending' ? (
+                <>
+                  <button type="button" className="patient-modal-btn decline" onClick={() => updateStatus(selectedAppointment.id, 'declined')}>
+                    <XCircle size={20} /> Decline
+                  </button>
+                  <button type="button" className="patient-modal-btn accept" onClick={() => updateStatus(selectedAppointment.id, 'accepted')}>
+                    <CheckCircle size={20} /> Accept
+                  </button>
+                </>
+              ) : (
+                <p className="patient-modal-status-msg">
+                  {selectedAppointment.status === 'accepted' && 'You have accepted this appointment request.'}
+                  {selectedAppointment.status === 'declined' && 'You have declined this appointment request.'}
+                </p>
+              )}
             </div>
           </div>
         </div>

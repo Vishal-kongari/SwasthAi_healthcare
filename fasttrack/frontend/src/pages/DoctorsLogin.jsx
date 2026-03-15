@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { ref, set } from 'firebase/database';
+import { useLanguage } from '../contexts/LanguageContext';
 import './Auth.css';
 
 export default function DoctorsLogin() {
@@ -10,19 +11,13 @@ export default function DoctorsLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
-    
-    // Exact requested credentials
-    if (email !== 'who@gmail.com') {
-      return setError('Access Denied: Only who@gmail.com is authorized to view this directory.');
-    }
-    
-    if (password !== '123456') {
-      return setError('Incorrect password for the authorized auditor account.');
-    }
+    if (email !== 'who@gmail.com') return setError(t('accessDenied'));
+    if (password !== '123456') return setError(t('incorrectPassword'));
 
     try {
       setError('');
@@ -49,7 +44,7 @@ export default function DoctorsLogin() {
       localStorage.setItem('doctorsAuth', 'true');
       navigate('/doctors');
     } catch (err) {
-      setError('Failed to authenticate.');
+      setError(t('authFailed'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -59,32 +54,19 @@ export default function DoctorsLogin() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>Directory Auditor Login</h2>
-        <p style={{textAlign: 'center', marginBottom: '20px', color: '#6b7280', fontSize: '0.9rem'}}>Please login with the authorized credential to access the global directory.</p>
+        <h2>{t('doctorsLoginTitle')}</h2>
+        <p style={{ textAlign: 'center', marginBottom: '20px', color: '#6b7280', fontSize: '0.9rem' }}>{t('doctorsLoginSubtitle')}</p>
         {error && <div className="auth-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Authorized Email</label>
-            <input 
-              type="email" 
-              required 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              placeholder="who@gmail.com" 
-            />
+            <label>{t('authorizedEmail')}</label>
+            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="who@gmail.com" />
           </div>
           <div className="form-group">
-            <label>Password</label>
-            <input 
-              type="password" 
-              required 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-            />
+            <label>{t('password')}</label>
+            <input type="password" required value={password} onChange={e => setPassword(e.target.value)} />
           </div>
-          <button disabled={loading} className="auth-btn" type="submit">
-            Access Directory
-          </button>
+          <button disabled={loading} className="auth-btn" type="submit">{t('accessDirectory')}</button>
         </form>
       </div>
     </div>

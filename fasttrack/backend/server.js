@@ -13,7 +13,15 @@ const { getDatabase, ref, set } = require('firebase/database');
 const Tesseract = require('tesseract.js');
 const multer = require('multer');
 const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const twilio = require('twilio');
 require('dotenv').config();
+
+// Prefer backend .venv Python for AI pipeline (has joblib, scikit-learn)
+const venvPython = path.join(__dirname, '.venv', 'bin', 'python');
+const pythonBin = process.env.PYTHON_PATH || (fs.existsSync(venvPython) ? venvPython : 'python3');
 
 // Setup Multer for memory storage
 const upload = multer({ storage: multer.memoryStorage() });
@@ -388,15 +396,17 @@ async function getHealthData(auth) {
   ]);
 
   let steps = sumInt(stepsPoints);
-  steps = Math.max(0, steps + 97 - 1400); // Temporary manual offset as requested
+  steps = Math.max(0, steps); // Temporary manual offset as requested
 
   const rawSteps = sumInt(rawPoints);
   const mergedSteps = sumInt(mergedPoints);
   console.log(`[DEBUG STEPS] estimated: ${steps}, raw: ${rawSteps}, merged: ${mergedSteps}`);
 
-  const heartRate = Math.round(latestFloat(hrPoints));
+  let heartRate = Math.round(latestFloat(hrPoints));
+  if (heartRate === 0) heartRate = 98;
   let oxygen = Math.round(latestFloat(oxyPoints));
-  if (oxygen === 0) oxygen = 97; // Default if no data available
+  if (oxygen ===  0) oxygen = 97; // Default if no data available
+
 
   const calF = sumFloat(calPoints);
   const calI = sumInt(calPoints);
@@ -474,6 +484,97 @@ app.get('/api/weekly', requireAuth, async (req, res) => {
   res.json({ weekly: data });
 });
 
+// ── Vital alert SMS (Twilio) — demo or real drop alert ─
+function toE164(phone) {
+  if (!phone || typeof phone !== 'string') return null;
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length === 10 && /^[6-9]/.test(digits)) return `+91${digits}`;
+  if (digits.length === 12 && digits.startsWith('91')) return `+${digits}`;
+  if (phone.startsWith('+')) return phone.length <= 16 ? phone : null;
+  return digits.length >= 10 ? `+${digits}` : null;
+}
+
+app.post('/api/send-vital-alert-sms', async (req, res) => {
+  try {
+    const { phone, demo, message } = req.body || {};
+    const toNumber = toE164(phone);
+    if (!toNumber) {
+      return res.status(400).json({ error: 'Valid phone number required (e.g. 10-digit Indian or E.164).' });
+    }
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+    if (!accountSid || !authToken || !fromNumber) {
+      console.error('Twilio env not set: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER');
+      return res.status(503).json({ error: 'SMS service is not configured.' });
+    }
+    const client = twilio(accountSid, authToken);
+    const body = demo
+      ? 'SwasthAI Demo: This is a test vital alert. In production, you\'d receive this when your vitals show a sudden drop. Stay healthy!'
+      : (message || 'SwasthAI: Your vitals show a significant change. Please check your dashboard.');
+    await client.messages.create({ body, from: fromNumber, to: toNumber });
+    res.json({ success: true, message: 'SMS sent.' });
+  } catch (err) {
+    console.error('Twilio SMS error:', err.message);
+    res.status(500).json({ error: 'Failed to send SMS.', detail: err.message });
+  }
+});
+
+// ── Run ML pipeline with extracted/manual data (shared) ─
+function runMlPipeline(extractedData) {
+  return new Promise((resolve, reject) => {
+    const pythonProcess = spawn(pythonBin, [
+      `${__dirname}/ai_diagnosis/run_pipeline.py`,
+      JSON.stringify(extractedData)
+    ]);
+    let outputData = '';
+    let errorData = '';
+    pythonProcess.stdout.on('data', (data) => { outputData += data.toString(); });
+    pythonProcess.stderr.on('data', (data) => { errorData += data.toString(); });
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        console.error('[AI Diagnosis] Python stderr:', errorData);
+        return reject(new Error(errorData || 'ML pipeline failed'));
+      }
+      try {
+        resolve(JSON.parse(outputData));
+      } catch (e) {
+        reject(new Error('Invalid output from ML pipeline'));
+      }
+    });
+  });
+}
+
+// ── AI Diagnosis: manual entry (same 9 attributes in canonical order) ─
+app.post('/api/analyze-manual', async (req, res) => {
+  try {
+    const body = req.body || {};
+    const extractedData = {
+      age: Number(body.age) || OCR_DEFAULTS.age,
+      sex: Number(body.sex) in { 0: 1, 1: 1 } ? Number(body.sex) : OCR_DEFAULTS.sex,
+      bmi: Number(body.bmi) || OCR_DEFAULTS.bmi,
+      bloodPressure: Number(body.bloodPressure) || Number(body.bp) || OCR_DEFAULTS.bloodPressure,
+      cholesterol: Number(body.cholesterol) || OCR_DEFAULTS.cholesterol,
+      glucose: Number(body.glucose) || OCR_DEFAULTS.glucose,
+      heartRate: Number(body.heartRate) || OCR_DEFAULTS.heartRate,
+      smoking: Number(body.smoking) in { 0: 1, 1: 1 } ? Number(body.smoking) : OCR_DEFAULTS.smoking,
+      liverEnzymeLevel: Number(body.liverEnzymeLevel) || OCR_DEFAULTS.liverEnzymeLevel,
+    };
+    console.log('[AI Diagnosis] Manual input (canonical order):', extractedData);
+    const predictions = await runMlPipeline(extractedData);
+    const finalReport = {
+      parsedData: extractedData,
+      predictions,
+      timestamp: new Date().toISOString(),
+      source: 'manual'
+    };
+    res.json(finalReport);
+  } catch (error) {
+    console.error('❌ AI Diagnosis manual error:', error.message);
+    res.status(500).json({ error: 'Analysis failed', detail: error.message });
+  }
+});
+
 // ── AI Diagnosis OCR Pipeline ───────────────────────────
 app.post('/api/analyze-report', upload.single('report'), async (req, res) => {
   try {
@@ -485,65 +586,23 @@ app.post('/api/analyze-report', upload.single('report'), async (req, res) => {
 
     // Run Tesseract OCR on the image buffer
     const ocrResult = await Tesseract.recognize(req.file.buffer, 'eng');
-    const text = ocrResult.data.text.toLowerCase();
+    const text = ocrResult.data.text;
 
-    console.log('[AI Diagnosis] OCR Extraction complete. Extracted text sample:', text.substring(0, 100));
+    console.log('[AI Diagnosis] OCR Extraction complete. Extracted text sample:', text.substring(0, 200));
 
-    // Basic heuristic regex parsing - this is highly brittle but serves as a placeholder
-    // In production, an LLM call to process 'text' goes here.
-    const extractedData = {
-      glucose: extractValue(/glucose[^\d]*(\d+\.?\d*)/i, text) || 100,
-      bp: extractValue(/blood pressure[^\d]*(\d+\.?\d*)/i, text) || extractValue(/bp[^\d]*(\d+\.?\d*)/i, text) || 80,
-      bmi: extractValue(/bmi[^\d]*(\d+\.?\d*)/i, text) || 25,
-      age: extractValue(/age[^\d]*(\d+)/i, text) || 40,
+    // Collect all details from OCR and map to model attributes in canonical order
+    const extractedData = extractAllFromOcr(text);
+    console.log('[AI Diagnosis] Mapped to model attributes (canonical order):', extractedData);
+
+    const predictions = await runMlPipeline(extractedData);
+    console.log('[AI Diagnosis] Final predictions:', JSON.stringify(predictions, null, 2));
+    const finalReport = {
+      parsedData: extractedData,
+      predictions,
+      timestamp: new Date().toISOString(),
+      source: 'ocr'
     };
-
-    console.log('[AI Diagnosis] Parsed features:', extractedData);
-
-    // Call the Python wrapper pipeline
-    const pythonProcess = spawn('/opt/anaconda3/bin/python', [
-      `${__dirname}/ai_diagnosis/run_pipeline.py`,
-      JSON.stringify(extractedData)
-    ]);
-
-    let outputData = '';
-    let errorData = '';
-
-    pythonProcess.stdout.on('data', (data) => {
-      outputData += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      errorData += data.toString();
-    });
-
-    pythonProcess.on('close', (code) => {
-      console.log(`[AI Diagnosis] Python process exited with code ${code}`);
-      if (code !== 0) {
-        console.error(`Python Error: ${errorData}`);
-        return res.status(500).json({ error: 'Failed to run ML pipeline' });
-      }
-
-      try {
-        const predictions = JSON.parse(outputData);
-
-        console.log('\n[AI Diagnosis] ======= FINAL PREDICTIONS =======');
-        console.log(JSON.stringify(predictions, null, 2));
-        console.log('==============================================\n');
-
-        // Final object to return and (optionally) save to Firebase
-        const finalReport = {
-          parsedData: extractedData,
-          predictions: predictions,
-          timestamp: new Date().toISOString()
-        };
-
-        res.json(finalReport);
-      } catch (err) {
-        console.error('Failed to parse Python output:', err, outputData);
-        res.status(500).json({ error: 'Invalid output from ML pipeline' });
-      }
-    });
+    res.json(finalReport);
 
   } catch (error) {
     console.error('❌ AI Diagnosis error:', error.message);
@@ -551,9 +610,190 @@ app.post('/api/analyze-report', upload.single('report'), async (req, res) => {
   }
 });
 
+// ── AI Symptom Analyser (Gemini) ─────────────────────────────────────
+app.post('/api/analyze-symptoms', async (req, res) => {
+  try {
+    const { symptoms } = req.body || {};
+    const text = (typeof symptoms === 'string' ? symptoms : '').trim();
+    if (!text) {
+      return res.status(400).json({ error: 'Please provide symptoms to analyze.' });
+    }
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error('GEMINI_API_KEY not set');
+      return res.status(500).json({ error: 'Symptom analysis is not configured.' });
+    }
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const prompt = `You are a medical symptom analyst. A patient described these symptoms:
+
+"${text}"
+
+Reply with ONLY plain text. Do NOT use markdown: no asterisks, no hashtags, no bold/italic symbols.
+
+Structure your reply in two parts separated by exactly this line (on its own line):
+---EXPLAINABLE---
+
+PART 1 (before ---EXPLAINABLE---):
+The very first line of Part 1 MUST be exactly one of these (choose based on severity of the described symptoms):
+PRIORITY: EMERGENCY   — life-threatening or need emergency care now (e.g. chest pain, severe bleeding, stroke signs, difficulty breathing, severe injury).
+PRIORITY: URGENT      — should see a doctor soon, within days (e.g. high fever, persistent pain, worsening condition, infection concerns).
+PRIORITY: ROUTINE     — can wait for routine or scheduled care (e.g. mild cold, minor aches, stable mild symptoms).
+
+After that priority line, add a blank line, then give a short structured analysis with these section titles on their own lines:
+Possible conditions: (2-4 brief possibilities)
+When to see a doctor: (one line: immediately / soon / routine, and why)
+Self-care tips: (1-3 short tips)
+
+Keep Part 1 under 250 words. Use only the section titles above; no extra formatting.
+
+PART 2 (after ---EXPLAINABLE---): In 2-4 clear sentences, explain why you gave this specific output for these specific symptoms. Describe which symptoms led to which conclusions. This is for transparency so the user understands the reasoning.`;
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    if (!response || !response.text) {
+      return res.status(500).json({ error: 'No response from AI.' });
+    }
+    const raw = response.text().trim();
+    const stripMarkdown = (s) => (s || '').replace(/\*\*/g, '').replace(/\*/g, '').replace(/#{1,6}\s?/g, '').replace(/__/g, '').replace(/_/g, '').trim();
+    const parts = raw.split(/\s*---EXPLAINABLE---\s*/);
+    let analysisText = stripMarkdown(parts[0] || raw);
+    const priorityMatch = analysisText.match(/PRIORITY:\s*(EMERGENCY|URGENT|ROUTINE)/i);
+    const priority = priorityMatch ? priorityMatch[1].toLowerCase() : 'routine';
+    analysisText = analysisText.replace(/PRIORITY:\s*(EMERGENCY|URGENT|ROUTINE)\s*/i, '').replace(/^\s*\n+/, '').trim();
+    const explanation = parts[1] ? stripMarkdown(parts[1]) : '';
+    res.json({ analysis: analysisText, explanation, priority });
+  } catch (error) {
+    console.error('❌ Symptom analysis error:', error.message);
+    res.status(500).json({ error: 'Analysis failed', detail: error.message });
+  }
+});
+
 function extractValue(regex, text) {
   const match = text.match(regex);
   return match && match[1] ? parseFloat(match[1]) : null;
+}
+
+// Canonical 9 attributes in model order: Age, Sex, BMI, BloodPressure, Cholesterol, Glucose, HeartRate, Smoking, LiverEnzymeLevel
+const CANONICAL_ATTRS = ['age', 'sex', 'bmi', 'bloodPressure', 'cholesterol', 'glucose', 'heartRate', 'smoking', 'liverEnzymeLevel'];
+const OCR_DEFAULTS = { age: 40, sex: 0, bmi: 25, bloodPressure: 120, cholesterol: 200, glucose: 100, heartRate: 72, smoking: 0, liverEnzymeLevel: 40 };
+
+// Multiple regex patterns per attribute (various ways lab reports write values). First match wins.
+const OCR_PATTERNS = {
+  age: [
+    /\bage\s*[:\-=\s]+\s*(\d+)/i,
+    /\b(?:yrs?|years?)\s*[:\-=\s]+\s*(\d+)/i,
+    /\b(\d+)\s*years?\s*old/i,
+    /\bage\s*(\d+)/i,
+  ],
+  sex: [
+    /\bsex\s*[:\-=\s]+\s*([01mfn])/i,
+    /\bgender\s*[:\-=\s]+\s*(\w+)/i,
+    /\bmale\b/i,  // presence -> 1
+    /\bfemale\b/i, // presence -> 0 (checked after male so female wins if both)
+  ],
+  bmi: [
+    /\bbmi\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\bbody\s*mass\s*(?:index)?\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\b(\d+\.?\d*)\s*kg\/m/i,
+  ],
+  bloodPressure: [
+    /\bblood\s*pressure\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\bbp\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\bsystolic\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\b(\d+)\s*\/\s*\d+\s*mmhg/i,
+    /\b(\d+)\s*\/\s*\d+\s*mmHg/i,
+  ],
+  cholesterol: [
+    /\bcholesterol\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\btotal\s*cholesterol\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\bchol\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\btc\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+  ],
+  glucose: [
+    /\bglucose\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\bblood\s*sugar\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\bfasting\s*(?:blood\s*)?glucose\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\bfbg\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\bsugar\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+  ],
+  heartRate: [
+    /\bheart\s*rate\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\bhr\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\bpulse\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\bbpm\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\b(\d+)\s*bpm\b/i,
+  ],
+  smoking: [
+    /\bsmoking\s*[:\-=\s]+\s*([01yn])/i,
+    /\bsmoker\s*[:\-=\s]+\s*([01yn])/i,
+    /\btobacco\s*[:\-=\s]+\s*([01yn])/i,
+    /\b(?:current|past)\s*smoker/i,  // presence -> 1
+    /\bnon[- ]?smoker/i,              // -> 0
+  ],
+  liverEnzymeLevel: [
+    /\bliver\s*enzyme\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\balt\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\bast\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\bsgpt\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\bsgot\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\balanine\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+    /\baspartate\s*[:\-=\s]+\s*(\d+\.?\d*)/i,
+  ],
+};
+
+function parseOcrSex(match, text) {
+  if (match === null) {
+    if (/female/i.test(text)) return 0;
+    if (/male/i.test(text)) return 1;
+    return OCR_DEFAULTS.sex;
+  }
+  const v = String(match[1] || match[0]).toLowerCase();
+  if (v === '1' || v === 'm' || v === 'male' || v === 'y') return 1;
+  return 0;
+}
+
+function parseOcrSmoking(match, text) {
+  if (match === null) {
+    if (/\b(?:current|past)\s*smoker|\bsmoker\b/i.test(text) && !/non[- ]?smoker/i.test(text)) return 1;
+    return OCR_DEFAULTS.smoking;
+  }
+  const v = String(match[1] || match[0]).toLowerCase();
+  if (v === '1' || v === 'y' || v === 'yes') return 1;
+  return 0;
+}
+
+/** Collect all details from OCR text and map to model attributes in canonical order. */
+function extractAllFromOcr(text) {
+  const raw = (text || '').toLowerCase();
+  const out = {};
+
+  for (const key of CANONICAL_ATTRS) {
+    const patterns = OCR_PATTERNS[key];
+    let value = null;
+    let matched = null;
+    for (const re of patterns) {
+      const m = raw.match(re);
+      if (!m) continue;
+      if (key === 'sex') {
+        out[key] = parseOcrSex(m, raw);
+        value = 1;
+        break;
+      }
+      if (key === 'smoking') {
+        out[key] = parseOcrSmoking(m, raw);
+        value = 1;
+        break;
+      }
+      const num = parseFloat(m[1]);
+      if (!Number.isNaN(num)) {
+        out[key] = key === 'sex' ? (num >= 1 ? 1 : 0) : (key === 'smoking' ? (num >= 1 ? 1 : 0) : num);
+        value = 1;
+        break;
+      }
+    }
+    if (value === null) out[key] = OCR_DEFAULTS[key];
+  }
+  return out;
 }
 
 // ── Start ───────────────────────────────────────────────

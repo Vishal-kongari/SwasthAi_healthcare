@@ -137,3 +137,268 @@
   margin-bottom: 1.5rem;
   font-weight: 500;
 }
+
+/* Doctors grid – clickable cards */
+.hospital-doctors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.hospital-doctor-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.hospital-doctor-card:hover {
+  border-color: #ec4899;
+  background: white;
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.12);
+}
+
+.hospital-doctor-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hospital-doctor-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hospital-doctor-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.hospital-doctor-name {
+  display: block;
+  font-size: 1.1rem;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+.hospital-doctor-meta {
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.hospital-doctor-contact {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.hospital-doctor-view {
+  font-size: 0.85rem;
+  color: #ec4899;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Doctor profile modal (same as Book Session) */
+.hospital-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+}
+
+.hospital-modal-content {
+  background: white;
+  border-radius: 1.5rem;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.hospital-modal-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.hospital-modal-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.hospital-modal-header {
+  padding: 2rem 2.5rem;
+  background: linear-gradient(135deg, #f8fafc, #eff6ff);
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 1.5rem 1.5rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.hospital-modal-dp {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: white;
+  border: 4px solid white;
+  box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hospital-modal-dp img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hospital-modal-title h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.hospital-modal-specialty {
+  color: #3b82f6;
+  font-weight: 600;
+  margin: 0.25rem 0 0 0;
+  font-size: 1rem;
+}
+
+.hospital-modal-body {
+  padding: 2rem 2.5rem;
+}
+
+.hospital-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.hospital-info-item {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.hospital-info-item-full {
+  grid-column: span 2;
+}
+
+.hospital-info-item label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.2rem;
+}
+
+.hospital-info-item p {
+  margin: 0;
+  color: #1e293b;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.hospital-affiliated-name {
+  color: #3b82f6 !important;
+  font-weight: 700;
+}
+
+.hospital-info-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.hospital-info-section label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.hospital-info-section p {
+  color: #475569;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.hospital-modal-footer {
+  padding: 1.25rem 2.5rem 2rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.hospital-modal-close-btn {
+  width: 100%;
+  padding: 0.85rem 1.5rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.hospital-modal-close-btn:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+@media (max-width: 600px) {
+  .hospital-info-grid {
+    grid-template-columns: 1fr;
+  }
+  .hospital-info-item-full {
+    grid-column: span 1;
+  }
+  .hospital-modal-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem;
+  }
+}

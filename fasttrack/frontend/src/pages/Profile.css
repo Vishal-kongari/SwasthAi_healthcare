@@ -149,6 +149,81 @@
   gap: 1.5rem;
 }
 
+.symptom-history-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.symptom-history-hint {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: -0.25rem 0 0.75rem 0;
+  font-weight: normal;
+}
+
+.symptom-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.symptom-history-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #fafafa;
+}
+
+.symptom-history-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.symptom-history-header:hover {
+  background: #f3f4f6;
+}
+
+.symptom-history-date {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #8b5cf6;
+  min-width: 5rem;
+}
+
+.symptom-history-snippet {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #6b7280;
+}
+
+.symptom-history-body {
+  padding: 0 1rem 1rem 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #4b5563;
+  border-top: 1px solid #e5e7eb;
+}
+
+.symptom-history-body p {
+  margin: 0 0 0.5rem 0;
+}
+
+.symptom-history-body p:last-child {
+  margin-bottom: 0;
+}
+
 @media (max-width: 480px) {
   .profile-row {
     grid-template-columns: 1fr;

@@ -1,5 +1,5 @@
 // src/pages/Dashboard.jsx — SwasthAI Light Joy Theme
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import MetricCard from '../components/MetricCard';
 import GoalRing from '../components/GoalRing';
@@ -7,16 +7,85 @@ import WeeklyChart from '../components/WeeklyChart';
 import ConnectBanner from '../components/ConnectBanner';
 import { useHealthData } from '../hooks/useHealthData';
 import { logout } from '../api/healthApi';
+import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { db } from '../firebase';
+import { ref, get } from 'firebase/database';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+const ALERT_COOLDOWN_MS = 5 * 60 * 1000;
 
 export default function Dashboard() {
   const [params] = useSearchParams();
   const { health, weekly, connected, loading, syncing, error, lastSync, backendOnline, refresh, setConnected, refetch } = useHealthData();
+  const { currentUser } = useAuth();
+  const { t } = useLanguage();
+  const [patientPhone, setPatientPhone] = useState('');
+  const [smsSending, setSmsSending] = useState(false);
+  const [smsMessage, setSmsMessage] = useState('');
+  const previousHealthRef = useRef(null);
+  const lastAlertSentRef = useRef(0);
 
   useEffect(() => {
     if (params.get('connected') === 'true') { setConnected(true); refetch(); }
   }, [params]);
 
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    get(ref(db, `users/${currentUser.uid}`)).then((snap) => {
+      if (snap.exists()) setPatientPhone(snap.val().phone || '');
+    }).catch(() => {});
+  }, [currentUser?.uid]);
+
+  useEffect(() => {
+    const hr = typeof health.heartRate === 'number' ? health.heartRate : null;
+    const o2 = typeof health.oxygen === 'number' ? health.oxygen : null;
+    const prev = previousHealthRef.current;
+    previousHealthRef.current = { heartRate: hr, oxygen: o2 };
+    if (!prev || !patientPhone) return;
+    const now = Date.now();
+    if (now - lastAlertSentRef.current < ALERT_COOLDOWN_MS) return;
+    const hrDrop = hr != null && (hr < 50 || (prev.heartRate != null && hr < prev.heartRate - 15));
+    const o2Drop = o2 != null && (o2 < 90 || (prev.oxygen != null && o2 < prev.oxygen - 5));
+    if (!hrDrop && !o2Drop) return;
+    const parts = [];
+    if (hrDrop) parts.push(`Heart rate ${hr} BPM`);
+    if (o2Drop) parts.push(`Blood oxygen ${o2}%`);
+    const message = `SwasthAI Alert: Significant change in vitals — ${parts.join('; ')}. Please check your dashboard.`;
+    lastAlertSentRef.current = now;
+    fetch(`${API_URL}/api/send-vital-alert-sms`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ phone: patientPhone, message }),
+    }).catch(() => {});
+  }, [health.heartRate, health.oxygen, patientPhone]);
+
   const handleLogout = async () => { await logout(); setConnected(false); window.location.href = '/'; };
+
+  const handleDemoSms = async () => {
+    if (!patientPhone?.trim()) {
+      setSmsMessage(t('addPhoneForDemo'));
+      return;
+    }
+    setSmsMessage('');
+    setSmsSending(true);
+    try {
+      const res = await fetch(`${API_URL}/api/send-vital-alert-sms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ phone: patientPhone.trim(), demo: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Failed to send');
+      setSmsMessage(t('demoSmSSent'));
+    } catch (e) {
+      setSmsMessage(e.message || t('addPhoneForDemo'));
+    } finally {
+      setSmsSending(false);
+    }
+  };
 
   // Sleep display — handle both string and object formats
   const sleepObj = typeof health.sleep === 'object' ? health.sleep : { label: health.sleep || '7h 20m', quality: 'Good' };
@@ -55,18 +124,15 @@ export default function Dashboard() {
               <span style={{ fontSize: 26 }}>🌿</span>
             </div>
             <div>
-              <div style={styles.logoTitle}>SwasthAI</div>
-              <div style={styles.logoSub}>Your Personal Health Dashboard</div>
+              <div style={styles.logoTitle}>{t('landingTitle')}</div>
+              <div style={styles.logoSub}>{t('vitalsPersonalDashboard')}</div>
             </div>
           </div>
 
           <div style={styles.headerRight}>
-            {/* Backend status pill */}
             <div style={{
               ...styles.pill,
-              background: backendOnline
-                ? connected ? '#F0FFF6' : '#EBF8FF'
-                : '#FFF5F5',
+              background: backendOnline ? connected ? '#F0FFF6' : '#EBF8FF' : '#FFF5F5',
               border: `1.5px solid ${backendOnline ? connected ? '#9AE6B4' : '#90CDF4' : '#FEB2B2'}`,
               color: backendOnline ? connected ? '#276749' : '#2B6CB0' : '#C53030'
             }}>
@@ -75,20 +141,15 @@ export default function Dashboard() {
                 background: backendOnline ? connected ? '#48BB78' : '#4299E1' : '#FC8181',
                 animation: backendOnline ? 'pulse 2s infinite' : 'none'
               }} />
-              {backendOnline ? connected ? '🟢 Live Data' : '🔵 Demo Mode' : '🔴 Backend Offline'}
+              {backendOnline ? connected ? `🟢 ${t('liveData')}` : `🔵 ${t('demoMode')}` : `🔴 ${t('backendOffline')}`}
             </div>
-
-            <button
-              style={{ ...styles.syncBtn, opacity: syncing ? 0.7 : 1 }}
-              onClick={refresh} disabled={syncing}
-            >
+            <button style={{ ...styles.syncBtn, opacity: syncing ? 0.7 : 1 }} onClick={refresh} disabled={syncing}>
               <span style={{ display: 'inline-block', animation: syncing ? 'spin 0.8s linear infinite' : 'none' }}>↻</span>
-              {syncing ? ' Syncing...' : ' Sync'}
+              {syncing ? ` ${t('syncing')}` : ` ${t('sync')}`}
             </button>
           </div>
         </header>
 
-        {/* ── DATE STRIP ── */}
         <div style={styles.dateStrip}>
           <div style={styles.dateLeft}>
             <span style={styles.dateEmoji}>📅</span>
@@ -97,7 +158,7 @@ export default function Dashboard() {
             </strong>
           </div>
           <div style={styles.syncTime}>
-            Last sync: <span style={{ color: '#2D9CDB', fontWeight: 700 }}>
+            {t('lastSync')} <span style={{ color: '#2D9CDB', fontWeight: 700 }}>
               {lastSync.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
@@ -108,15 +169,15 @@ export default function Dashboard() {
           <div style={styles.warnBox}>
             <span style={{ fontSize: 18 }}>⚠️</span>
             <div>
-              <strong>Backend is not running</strong> — showing offline demo data.
+              <strong>{t('backendNotRunning')}</strong> {t('showingDemoData')}
               <br />
-              Open terminal → <code style={styles.inlineCode}>cd fasttrack/backend</code> → <code style={styles.inlineCode}>npm run dev</code>
+              {t('backendNotRunningDesc')}
             </div>
           </div>
         )}
 
         {error && (
-          <div style={styles.errorBox}>⚠️ {error} — showing demo data</div>
+          <div style={styles.errorBox}>⚠️ {error} {t('showingDemoData')}</div>
         )}
 
         {/* ── CONNECT BANNER ── */}
@@ -132,28 +193,28 @@ export default function Dashboard() {
         {/* ── METRIC CARDS ── */}
         <div style={styles.grid}>
           <MetricCard delay={0}
-            type="steps" icon="👣" label="Steps Today"
+            type="steps" icon="👣" label={t('stepsToday')}
             value={(health.steps || 0).toLocaleString()}
             unit={`of ${(health.stepsGoal || 10000).toLocaleString()} goal`}
             trend="vs yesterday" trendDir="up"
             progress={((health.steps || 0) / (health.stepsGoal || 10000)) * 100}
           />
           <MetricCard delay={80}
-            type="heart" icon="❤️" label="Heart Rate"
+            type="heart" icon="❤️" label={t('heartRate')}
             value={health.heartRate || '--'}
             unit={`BPM — ${health.heartRateStatus || 'Normal'}`}
             trend="Resting zone" trendDir="neutral"
             progress={((health.heartRate || 0) / 120) * 100}
           />
           <MetricCard delay={160}
-            type="oxygen" icon="🩸" label="Blood Oxygen"
+            type="oxygen" icon="🩸" label={t('bloodOxygen')}
             value={health.oxygen || '--'}
             unit={`% — ${health.oxygenStatus || 'Excellent'}`}
             trend="Optimal range" trendDir="up"
             progress={health.oxygen || 0}
           />
           <MetricCard delay={240}
-            type="calories" icon="🔥" label="Calories Burned"
+            type="calories" icon="🔥" label={t('caloriesBurned')}
             value={health.calories || 0}
             unit={`kcal of ${health.caloriesGoal || 500} goal`}
             trend="On track" trendDir="up"
@@ -161,12 +222,48 @@ export default function Dashboard() {
           />
 
           <MetricCard delay={400}
-            type="distance" icon="📍" label="Distance"
+            type="distance" icon="📍" label={t('distance')}
             value={health.distance || 0}
             unit="km walked today"
             trend="vs daily avg" trendDir="up"
             progress={((health.distance || 0) / 10) * 100}
           />
+        </div>
+
+        {/* ── VITAL ALERTS (SMS) ── */}
+        <div style={styles.card}>
+          <div style={styles.cardHeader}>
+            <div>
+              <div style={styles.cardTitle}>📱 {t('vitalAlerts')}</div>
+              <div style={styles.cardSub}>{t('vitalAlertsDesc')}</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+            <button
+              type="button"
+              onClick={handleDemoSms}
+              disabled={smsSending}
+              style={{
+                ...styles.syncBtn,
+                opacity: smsSending ? 0.7 : 1,
+                background: 'linear-gradient(135deg,#10b981,#34d399)',
+                boxShadow: '0 3px 12px rgba(16,185,129,0.3)',
+              }}
+            >
+              {smsSending ? t('sending') : t('demoSms')}
+            </button>
+            {smsMessage && (
+              <span style={{ fontSize: 13, color: smsMessage === t('demoSmSSent') ? '#276749' : '#C53030', fontWeight: 600 }}>
+                {smsMessage}
+              </span>
+            )}
+          </div>
+          {!currentUser && (
+            <p style={{ marginTop: 10, fontSize: 12, color: '#718096' }}>{t('loginForAlerts')}</p>
+          )}
+          {currentUser && !patientPhone && (
+            <p style={{ marginTop: 10, fontSize: 12, color: '#718096' }}>{t('addPhoneInProfile')}</p>
+          )}
         </div>
 
         {/* ── BOTTOM ROW ── */}
@@ -176,23 +273,22 @@ export default function Dashboard() {
           <div style={styles.card}>
             <div style={styles.cardHeader}>
               <div>
-                <div style={styles.cardTitle}>Weekly Steps</div>
-                <div style={styles.cardSub}>Your 7-day activity</div>
+                <div style={styles.cardTitle}>{t('weeklySteps')}</div>
+                <div style={styles.cardSub}>{t('your7DayActivity')}</div>
               </div>
-              <span style={styles.badge}>Last 7 days</span>
+              <span style={styles.badge}>{t('last7Days')}</span>
             </div>
             <WeeklyChart data={weekly} />
           </div>
 
-          {/* Goal Ring */}
           <div style={styles.card}>
             <div style={styles.cardHeader}>
               <div>
-                <div style={styles.cardTitle}>Daily Goals</div>
-                <div style={styles.cardSub}>Today's progress</div>
+                <div style={styles.cardTitle}>{t('dailyGoals')}</div>
+                <div style={styles.cardSub}>{t('todaysProgress')}</div>
               </div>
               <span style={{ ...styles.badge, background: '#EBF8FF', color: '#2D9CDB', borderColor: '#90CDF4' }}>
-                {goalPct}% done
+                {goalPct}% {t('done')}
               </span>
             </div>
             <GoalRing percentage={goalPct} goals={goals} />

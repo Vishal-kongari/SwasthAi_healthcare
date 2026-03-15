@@ -5,42 +5,61 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
 
-# Load dataset
-df = pd.read_csv("data/dataset.csv")
 
-# Convert categorical values
-df["GENDER"] = df["GENDER"].map({"M":1,"F":0})
-df["LUNG_CANCER"] = df["LUNG_CANCER"].map({"YES":1,"NO":0})
+# -----------------------------
+# 1️⃣ Load Dataset
+# -----------------------------
+df = pd.read_csv("/Users/asmithareddy/Desktop/swasthAI/SwasthAi_healthcare/fasttrack/backend/ai_diagnosis/models/lungdisease/data/Lung_disease_1000.csv")   # change name if needed
 
-# Features and label
-X = df.drop("LUNG_CANCER", axis=1)
-y = df["LUNG_CANCER"]
+print("Dataset Loaded Successfully")
+print(df.head())
 
-# Train test split (stratified for balanced classes)
+
+# -----------------------------
+# 2️⃣ Define Features & Target
+# -----------------------------
+X = df.drop("Outcome", axis=1)
+y = df["Outcome"]
+
+
+# -----------------------------
+# 3️⃣ Train/Test Split
+# -----------------------------
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y,
+    X,
+    y,
     test_size=0.2,
-    stratify=y,
     random_state=42
 )
 
-# Train model
+
+# -----------------------------
+# 4️⃣ Train Model
+# -----------------------------
 model = RandomForestClassifier(
-    n_estimators=500,
-    max_depth=12,
-    class_weight="balanced",
+    n_estimators=200,
+    max_depth=10,
     random_state=42
 )
 
 model.fit(X_train, y_train)
 
-# Evaluate
-pred = model.predict(X_test)
 
-print("Accuracy:", accuracy_score(y_test, pred))
-print(classification_report(y_test, pred))
+# -----------------------------
+# 5️⃣ Evaluate Model
+# -----------------------------
+predictions = model.predict(X_test)
 
-# Save model
-joblib.dump(model, "models/lung_model.pkl")
+accuracy = accuracy_score(y_test, predictions)
 
-print("Model saved successfully")
+print("\nModel Accuracy:", accuracy)
+print("\nClassification Report:\n")
+print(classification_report(y_test, predictions))
+
+
+# -----------------------------
+# 6️⃣ Save Model
+# -----------------------------
+joblib.dump(model, "lung_prediction_model.pkl")
+
+print("\nModel saved as health_prediction_model.pkl")

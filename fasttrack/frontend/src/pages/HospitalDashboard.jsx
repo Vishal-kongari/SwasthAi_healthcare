@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
-import { ref, push, set, onValue, serverTimestamp } from 'firebase/database';
+import { ref, push, set, get, onValue, serverTimestamp } from 'firebase/database';
+import { User, X, Award, Briefcase, Phone, Mail } from 'lucide-react';
 import './HospitalDashboard.css';
 
 export default function HospitalDashboard() {
@@ -13,6 +14,12 @@ export default function HospitalDashboard() {
   const [doctorSpecialty, setDoctorSpecialty] = useState('');
   const [doctorContact, setDoctorContact] = useState('');
   const [doctorsList, setDoctorsList] = useState([]);
+
+  // Doctor profile modal (full profile from their user account)
+  const [showDoctorProfileModal, setShowDoctorProfileModal] = useState(false);
+  const [selectedDoctorForProfile, setSelectedDoctorForProfile] = useState(null);
+  const [doctorFullProfile, setDoctorFullProfile] = useState(null);
+  const [hospitalName, setHospitalName] = useState('');
 
   // Report Form
   const [patientEmail, setPatientEmail] = useState('');
@@ -37,6 +44,36 @@ export default function HospitalDashboard() {
       }
     });
   }, [currentUser]);
+
+  // Fetch hospital name for modal
+  useEffect(() => {
+    if (!currentUser) return;
+    const userRef = ref(db, `users/${currentUser.uid}`);
+    get(userRef).then((snap) => {
+      if (snap.exists()) setHospitalName(snap.val().name || '');
+    });
+  }, [currentUser]);
+
+  const openDoctorProfile = async (doc) => {
+    setSelectedDoctorForProfile(doc);
+    setShowDoctorProfileModal(true);
+    setDoctorFullProfile(null);
+    try {
+      const doctorUserRef = ref(db, `users/${doc.id}`);
+      const snap = await get(doctorUserRef);
+      if (snap.exists()) setDoctorFullProfile(snap.val());
+      else setDoctorFullProfile({}); // fallback to card data
+    } catch (e) {
+      console.error('Failed to load doctor profile', e);
+      setDoctorFullProfile({});
+    }
+  };
+
+  const closeDoctorProfileModal = () => {
+    setShowDoctorProfileModal(false);
+    setSelectedDoctorForProfile(null);
+    setDoctorFullProfile(null);
+  };
 
   // Protect route
   if (!currentUser || userRole !== 'hospital') {
@@ -117,22 +154,28 @@ export default function HospitalDashboard() {
             
             <div className="doctors-list" style={{marginTop: '20px'}}>
               {doctorsList.length === 0 ? <p>No doctors affiliated yet.</p> : (
-                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '15px'}}>
+                <div className="hospital-doctors-grid">
                   {doctorsList.map(doc => (
-                    <div key={doc.id} style={{border: '1px solid #e5e7eb', borderRadius: '10px', padding: '15px', display: 'flex', alignItems: 'center', gap: '15px', background: '#f9fafb'}}>
-                      <div style={{width: '50px', height: '50px', borderRadius: '50%', backgroundColor: '#e5e7eb', overflow: 'hidden', flexShrink: 0}}>
+                    <button
+                      key={doc.id}
+                      type="button"
+                      className="hospital-doctor-card"
+                      onClick={() => openDoctorProfile(doc)}
+                    >
+                      <div className="hospital-doctor-avatar">
                         {doc.displayPicture ? (
-                          <img src={doc.displayPicture} alt={doc.name} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                          <img src={doc.displayPicture} alt={doc.name} />
                         ) : (
-                          <div style={{width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: '24px'}}>👨‍⚕️</div>
+                          <User size={28} color="#9ca3af" />
                         )}
                       </div>
-                      <div>
-                        <strong style={{fontSize: '1.1rem', color: '#111827'}}>{doc.name}</strong>
-                        <div style={{fontSize: '0.9rem', color: '#4b5563', marginTop: '2px'}}>{doc.specialty} {doc.degree && `• ${doc.degree}`}</div>
-                        <div style={{fontSize: '0.85rem', color: '#6b7280', marginTop: '4px'}}>{doc.contact}</div>
+                      <div className="hospital-doctor-info">
+                        <strong className="hospital-doctor-name">{doc.name}</strong>
+                        <div className="hospital-doctor-meta">{doc.specialty} {doc.degree && `• ${doc.degree}`}</div>
+                        <div className="hospital-doctor-contact">{doc.contact}</div>
                       </div>
-                    </div>
+                      <span className="hospital-doctor-view">View profile →</span>
+                    </button>
                   ))}
                 </div>
               )}
@@ -181,6 +224,80 @@ export default function HospitalDashboard() {
           </div>
         )}
       </div>
+
+      {/* Doctor full profile modal (same as Book Session) */}
+      {showDoctorProfileModal && selectedDoctorForProfile && (
+        <div className="hospital-modal-overlay" onClick={closeDoctorProfileModal}>
+          <div className="hospital-modal-content doctor-profile-modal" onClick={e => e.stopPropagation()}>
+            <button type="button" className="hospital-modal-close" onClick={closeDoctorProfileModal} aria-label="Close">
+              <X size={24} />
+            </button>
+            <div className="hospital-modal-header">
+              <div className="hospital-modal-dp">
+                {(doctorFullProfile?.displayPicture || selectedDoctorForProfile.displayPicture) ? (
+                  <img src={doctorFullProfile?.displayPicture || selectedDoctorForProfile.displayPicture} alt="" />
+                ) : (
+                  <User size={64} color="#64748b" />
+                )}
+              </div>
+              <div className="hospital-modal-title">
+                <h2>Dr. {doctorFullProfile?.name || selectedDoctorForProfile.name || 'Doctor'}</h2>
+                <p className="hospital-modal-specialty">{doctorFullProfile?.specialty || selectedDoctorForProfile.specialty || 'General Practitioner'}</p>
+              </div>
+            </div>
+            <div className="hospital-modal-body">
+              <div className="hospital-info-grid">
+                <div className="hospital-info-item">
+                  <Award size={20} color="#8b5cf6" />
+                  <div>
+                    <label>Degree / Qualification</label>
+                    <p>{doctorFullProfile?.degree || selectedDoctorForProfile.degree || 'MBBS'}</p>
+                  </div>
+                </div>
+                <div className="hospital-info-item">
+                  <Briefcase size={20} color="#3b82f6" />
+                  <div>
+                    <label>Specialty</label>
+                    <p>{doctorFullProfile?.specialty || selectedDoctorForProfile.specialty || 'General Practitioner'}</p>
+                  </div>
+                </div>
+                <div className="hospital-info-item">
+                  <Phone size={20} color="#10b981" />
+                  <div>
+                    <label>Contact Number</label>
+                    <p>{doctorFullProfile?.phone || selectedDoctorForProfile.contact || 'Not provided'}</p>
+                  </div>
+                </div>
+                <div className="hospital-info-item">
+                  <Mail size={20} color="#ec4899" />
+                  <div>
+                    <label>Email Address</label>
+                    <p>{doctorFullProfile?.email || 'Not provided'}</p>
+                  </div>
+                </div>
+                <div className="hospital-info-item hospital-info-item-full">
+                  <Briefcase size={20} color="#3b82f6" />
+                  <div>
+                    <label>Affiliated Hospital</label>
+                    <p className="hospital-affiliated-name">{hospitalName || 'This hospital'}</p>
+                  </div>
+                </div>
+              </div>
+              {(doctorFullProfile?.about) && (
+                <div className="hospital-info-section">
+                  <label>About Doctor</label>
+                  <p>{doctorFullProfile.about}</p>
+                </div>
+              )}
+            </div>
+            <div className="hospital-modal-footer">
+              <button type="button" className="hospital-modal-close-btn" onClick={closeDoctorProfileModal}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import './Auth.css';
 
 export default function Login() {
@@ -9,6 +10,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -31,7 +33,7 @@ export default function Login() {
         navigate('/dashboard');
       }
     } catch (err) {
-      setError('Failed to sign in. Check email and password.');
+      setError(t('authError'));
     } finally {
       setLoading(false);
     }
@@ -40,33 +42,21 @@ export default function Login() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>Login to SwasthAi</h2>
+        <h2>{t('loginTitle')}</h2>
         {error && <div className="auth-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Email</label>
-            <input 
-              type="email" 
-              required 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-            />
+            <label>{t('email')}</label>
+            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div className="form-group">
-            <label>Password</label>
-            <input 
-              type="password" 
-              required 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-            />
+            <label>{t('password')}</label>
+            <input type="password" required value={password} onChange={e => setPassword(e.target.value)} />
           </div>
-          <button disabled={loading} className="auth-btn" type="submit">
-            Log In
-          </button>
+          <button disabled={loading} className="auth-btn" type="submit">{t('logIn')}</button>
         </form>
         <div className="auth-links">
-          Don't have an account? <Link to="/signup">Sign Up</Link>
+          {t('noAccount')} <Link to="/signup">{t('signUp')}</Link>
         </div>
       </div>
     </div>

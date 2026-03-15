@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import './Auth.css';
 
 export default function HospitalLogin() {
@@ -9,6 +10,7 @@ export default function HospitalLogin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -19,7 +21,7 @@ export default function HospitalLogin() {
       await login(email, password);
       navigate('/hospital/dashboard');
     } catch (err) {
-      setError('Failed to sign in. Check email and password.');
+      setError(t('authError'));
     } finally {
       setLoading(false);
     }
@@ -28,33 +30,21 @@ export default function HospitalLogin() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>Hospital Portal Login</h2>
+        <h2>{t('hospitalLoginTitle')}</h2>
         {error && <div className="auth-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Email</label>
-            <input 
-              type="email" 
-              required 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-            />
+            <label>{t('email')}</label>
+            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div className="form-group">
-            <label>Password</label>
-            <input 
-              type="password" 
-              required 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-            />
+            <label>{t('password')}</label>
+            <input type="password" required value={password} onChange={e => setPassword(e.target.value)} />
           </div>
-          <button disabled={loading} className="auth-btn" type="submit">
-            Log In
-          </button>
+          <button disabled={loading} className="auth-btn" type="submit">{t('logIn')}</button>
         </form>
         <div className="auth-links">
-          Not registered? <Link to="/hospital/signup">Sign Up</Link>
+          {t('notRegistered')} <Link to="/hospital/signup">{t('signUp')}</Link>
         </div>
       </div>
     </div>
